@@ -1,0 +1,55 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@layer components {
+  @import './styles/modal.css';
+}
+
+
+/* Modern Scrollbar Styles */
+
+@layer base {
+  html,
+  body,
+  #root {
+      font-family: "Montserrat", sans-serif;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+      font: inherit;
+  }
+
+  /* For Webkit browsers (Chrome, Safari) */
+   ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+  }
+   ::-webkit-scrollbar-track {
+      background: transparent;
+  }
+   ::-webkit-scrollbar-thumb {
+      background: #2D3748;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+  }
+   ::-webkit-scrollbar-thumb:hover {
+      background: #4A5568;
+  }
+  /* For Firefox */
+  * {
+      scrollbar-width: thin;
+      scrollbar-color: #2D3748 transparent;
+  }
+  /* Smooth scrolling for the entire page */
+  html {
+      scroll-behavior: smooth;
+  }
+}

@@ -1,0 +1,39 @@
+/* Modal specific styles */
+.modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50;
+  }
+  
+  .modal-container {
+    @apply bg-brand-dark rounded-xl border border-gray-700 flex flex-col;
+  }
+  
+  .modal-content {
+    @apply overflow-y-auto;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+    
+    /* Hide scrollbar by default but show on hover/focus */
+    &:hover {
+      &::-webkit-scrollbar-thumb {
+        background: #4A5568;
+      }
+    }
+  }
+  
+  /* Chart specific styles */
+  .recharts-wrapper {
+    @apply !w-full;
+  }
+  
+  .recharts-surface {
+    @apply overflow-visible;
+  }
+  
+  .recharts-tooltip-wrapper {
+    @apply !opacity-100;
+  }
+  
+  
+  .modal-container {
+    @apply bg-brand-dark rounded-xl border border-gray-700 flex flex-col;
+  }

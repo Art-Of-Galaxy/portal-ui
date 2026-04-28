@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_2" data-name="Capa 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 35 35">
+  <defs>
+    <style>
+      .cls-1 {
+        isolation: isolate;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: url(#Degradado_sin_nombre_2);
+      }
+    </style>
+    <linearGradient id="Degradado_sin_nombre_2" data-name="Degradado sin nombre 2" x1="0" y1="17.5" x2="35" y2="17.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00ff89"/>
+      <stop offset="1" stop-color="#5541ff"/>
+    </linearGradient>
+  </defs>
+  <g id="TXTS">
+    <g class="cls-1">
+      <rect class="cls-3" x="0" width="35" height="35" rx="5.74" ry="5.74"/>
+      <g id="bouryO">
+        <g>
+          <path class="cls-2" d="M26.01,13.24v8.53c0,.96-.9,1.72-1.83,1.69h-13.44c-.87.01-1.76-.76-1.76-1.66v-8.57c.15.02.3.16.43.25,2.57,1.8,5.03,3.78,7.65,5.51.41.14.84.08,1.2-.17l7.63-5.56.12-.03Z"/>
+          <path class="cls-2" d="M25.11,11.74s0,.08-.04.08c-2.25,1.52-4.39,3.34-6.64,4.83-.65.43-1.05.51-1.73.07l-6.79-4.93c-.02-.07.03-.05.07-.07.24-.13.55-.16.82-.19h13.47c.14,0,.78.13.85.21Z"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
