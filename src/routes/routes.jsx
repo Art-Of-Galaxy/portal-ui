@@ -12,6 +12,7 @@ import NewProject from "../pages/projects/NewProject";
 import BrandingDesign from "../pages/projects/BrandingDesign";
 import BrandGuidelinesForm from "../pages/projects/BrandGuidelinesForm";
 import RebrandingForm from "../pages/projects/RebrandingForm";
+import EcommerceMockupsForm from "../pages/projects/EcommerceMockupsForm";
 import ProjectDetail from "../pages/projects/ProjectDetail";
 import Authentication from "../components/Authentication";
 import ForgotPassword from "../pages/login/ForgotPassword";
@@ -53,7 +54,7 @@ const AppRoutes = () => {
           <Route path="/new-projects/branding-design/printing" element={withLayout(ComingSoon, { title: "Printing Design", description: "Print-ready collateral powered by GPT and Claude Sonnet. Tool flow coming soon." })} />
           <Route path="/new-projects/branding-design/rebranding" element={withLayout(RebrandingForm)} />
           <Route path="/new-projects/branding-design/packaging" element={withLayout(ComingSoon, { title: "Packaging Design", description: "Production-ready packaging concepts. Tool flow coming soon." })} />
-          <Route path="/new-projects/branding-design/ecommerce-mockups" element={withLayout(ComingSoon, { title: "Ecommerce Mockups", description: "Realistic store and product mockups. Tool flow coming soon." })} />
+          <Route path="/new-projects/branding-design/ecommerce-mockups" element={withLayout(EcommerceMockupsForm)} />
 
           {/* Other 7 domain expert agents (placeholders) */}
           <Route path="/new-projects/web-solutions" element={withLayout(ComingSoon, { title: "Web Solutions", description: "Website development, e-commerce, landing pages, SEO, web apps and remodels. Coming soon." })} />

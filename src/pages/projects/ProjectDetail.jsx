@@ -4,6 +4,7 @@ import { ArrowLeft, FolderKanban } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 import BrandGuidelinesView from "./BrandGuidelinesView";
 import RebrandingView from "./RebrandingView";
+import EcommerceMockupsView from "./EcommerceMockupsView";
 
 function formatDate(value) {
   if (!value) return "—";
@@ -113,6 +114,15 @@ export default function ProjectDetail() {
         <RebrandingView
           rebranding={output}
           brandName={project.project_name}
+          model={project.model}
+        />
+      );
+    }
+    if (serviceType === "ecommerce_mockups") {
+      return (
+        <EcommerceMockupsView
+          mockups={output}
+          productName={project.project_name}
           model={project.model}
         />
       );
