@@ -18,6 +18,11 @@ export function Header() {
 
   return (
     <header className="portal-header">
+      <div className="portal-search">
+        <Search size={16} className="portal-search-icon" />
+        <input type="text" placeholder="Search" aria-label="Search" />
+      </div>
+
       <div className="portal-header-actions">
         <button type="button" className="portal-icon-btn" aria-label="Explore">
           <Compass size={18} />
@@ -49,11 +54,6 @@ export function Header() {
         <button type="button" className="portal-icon-btn is-avatar" aria-label="Profile">
           {initial}
         </button>
-      </div>
-
-      <div className="portal-search portal-search-right">
-        <Search size={16} className="portal-search-icon" />
-        <input type="text" placeholder="Search" aria-label="Search" />
       </div>
     </header>
   );

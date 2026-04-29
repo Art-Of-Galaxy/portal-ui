@@ -16,6 +16,38 @@ function formatDate(value) {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 }
 
+function formatServiceType(value) {
+  if (!value) return "Project";
+  return String(value)
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function statusLabel(value) {
+  const labels = { 1: "In Progress", 2: "Pending", 3: "Done" };
+  return labels[value] || value || "Pending";
+}
+
+function priorityLabel(value) {
+  const labels = { 1: "Low", 2: "Medium", 3: "High" };
+  return labels[value] || value || "Low";
+}
+
+function getProjectDetails(project) {
+  return {
+    title: project.project_name || project.name || "Untitled project",
+    created: project.created_at || project.created_date || project.startDate,
+    due: project.due_date || project.endDate,
+    service: formatServiceType(project.service_type),
+    category: project.category || "General",
+    status: project.status_label || statusLabel(project.status),
+    priority: project.priority_label || priorityLabel(project.priority),
+    owner: project.ownerId || project.assignee || project.user_email || "",
+    model: project.model || "",
+    tags: project.tags || "",
+  };
+}
+
 export function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
@@ -86,27 +118,38 @@ export function Dashboard() {
 
       {view === "grid" ? (
         <div className="portal-project-grid">
-          {filtered.map((p, i) => (
-            <button
-              key={p.id ?? i}
-              type="button"
-              className={`portal-project-card ${i === 0 ? "is-accent" : ""}`}
-              onClick={() => navigate(`/my-projects/${p.id ?? ""}`)}
-            >
-              <h3 className="portal-project-title">{p.name || "Untitled"}</h3>
-              <p className="portal-project-meta">
-                Created: {formatDate(p.startDate)}
-              </p>
-              <p className="portal-project-body">
-                <strong>Brand:</strong> {p.brand || p.ownerId || "—"}
-                {p.summary ? ` — ${p.summary}` : ""}
-              </p>
-              <div className="portal-project-footer">
-                <span>Last viewed recently</span>
-                <span>•••</span>
-              </div>
-            </button>
-          ))}
+          {filtered.map((p, i) => {
+            const details = getProjectDetails(p);
+            return (
+              <button
+                key={p.id ?? i}
+                type="button"
+                className={`portal-project-card ${i === 0 ? "is-accent" : ""}`}
+                onClick={() => navigate(`/my-projects/${p.id ?? ""}`)}
+              >
+                <h3 className="portal-project-title">{details.title}</h3>
+                <p className="portal-project-meta">
+                  Created: {formatDate(details.created) || "Not set"}
+                </p>
+                {/*
+                <div className="portal-project-details">
+                  <p><strong>Service:</strong> {details.service}</p>
+                  <p><strong>Category:</strong> {details.category}</p>
+                  <p><strong>Status:</strong> {details.status}</p>
+                  <p><strong>Priority:</strong> {details.priority}</p>
+                  {details.due ? <p><strong>Due:</strong> {formatDate(details.due)}</p> : null}
+                  {details.owner ? <p><strong>Owner:</strong> {details.owner}</p> : null}
+                  {details.model ? <p><strong>Model:</strong> {details.model}</p> : null}
+                  {details.tags ? <p><strong>Tags:</strong> {details.tags}</p> : null}
+                </div>
+                */}
+                <div className="portal-project-footer">
+                  <span>{details.service}</span>
+                  <span>...</span>
+                </div>
+              </button>
+            );
+          })}
           <button
             type="button"
             className="portal-project-card portal-project-new"
@@ -131,20 +174,33 @@ export function Dashboard() {
               <thead>
                 <tr>
                   <th>Project</th>
-                  <th>Status</th>
-                  <th>Priority</th>
                   <th>Created</th>
+                  <th>Service</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p, i) => (
-                  <tr key={p.id ?? i}>
-                    <td style={{ color: "var(--portal-text)" }}>{p.name}</td>
-                    <td>{p.status || "—"}</td>
-                    <td>{p.priority || "—"}</td>
-                    <td>{formatDate(p.startDate)}</td>
-                  </tr>
-                ))}
+                {filtered.map((p, i) => {
+                  const details = getProjectDetails(p);
+                  return (
+                    <tr
+                      key={p.id ?? i}
+                      className="portal-project-list-row"
+                      tabIndex={0}
+                      role="button"
+                      onClick={() => navigate(`/my-projects/${p.id ?? ""}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          navigate(`/my-projects/${p.id ?? ""}`);
+                        }
+                      }}
+                    >
+                      <td style={{ color: "var(--portal-text)" }}>{details.title}</td>
+                      <td>{formatDate(details.created) || "Not set"}</td>
+                      <td>{details.service}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
