@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import {
@@ -54,7 +54,7 @@ function NavButton({ icon: Icon, label, path, badge, onClick, isActive }) {
       onClick={() => onClick(path)}
       className={`portal-nav-item ${isActive ? "is-active" : ""}`}
     >
-      <Icon className="portal-nav-icon" />
+      {React.createElement(Icon, { className: "portal-nav-icon" })}
       <span className="portal-nav-label">{label}</span>
       {badge ? (
         <span className={`portal-nav-badge badge-${badge.tone}`}>{badge.text}</span>
@@ -82,6 +82,7 @@ export function Sidebar() {
   const menuRef = useRef(null);
 
   const userName = localStorage.getItem("user_name") || "Andrey Vasilyev";
+  const profilePhotoUrl = localStorage.getItem("profile_photo_url");
   const userRole = "Admin";
   const initials = useMemo(() => {
     const parts = userName.trim().split(/\s+/).slice(0, 2);
@@ -114,7 +115,9 @@ export function Sidebar() {
       </div>
 
       <div className="portal-user-card" ref={menuRef} onClick={() => setMenuOpen((o) => !o)}>
-        <div className="portal-user-avatar">{initials}</div>
+        <div className="portal-user-avatar">
+          {profilePhotoUrl ? <img src={profilePhotoUrl} alt="" /> : initials}
+        </div>
         <div className="portal-user-info">
           <span className="portal-user-name">{userName}</span>
           <span className="portal-user-role">{userRole}</span>

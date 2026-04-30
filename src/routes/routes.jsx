@@ -18,6 +18,7 @@ import Authentication from "../components/Authentication";
 import ForgotPassword from "../pages/login/ForgotPassword";
 import ForgotPasswordSent from "../pages/login/ForgotPasswordSent";
 import ComingSoon from "../pages/ComingSoon";
+import ProfileSettings from "../pages/profile/ProfileSettings";
 
 const withLayout = (Page, props = {}) => (
   <AuthenticatedLayout>
@@ -80,7 +81,7 @@ const AppRoutes = () => {
 
           <Route path="/support" element={withLayout(ComingSoon, { title: "Live customer support", description: "Chat with our team. We'll bring live support right inside the portal." })} />
           <Route path="/invite-team" element={withLayout(ComingSoon, { title: "Invite team members", description: "Invite teammates and set their roles to collaborate on projects." })} />
-          <Route path="/profile" element={withLayout(ComingSoon, { title: "Profile settings", description: "Edit your profile, preferences and notifications." })} />
+          <Route path="/profile" element={withLayout(ProfileSettings)} />
         </Route>
 
         <Route path="*" element={<Navigate to="/home" replace />} />

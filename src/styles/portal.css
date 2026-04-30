@@ -167,6 +167,14 @@ html.portal-theme-dark {
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.portal-user-avatar img,
+.portal-icon-btn.is-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .portal-user-info {
@@ -2320,6 +2328,126 @@ html.portal-theme-dark {
   font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+/* Profile settings */
+.profile-settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.profile-settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-settings-section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-settings-section-head h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--portal-text);
+}
+
+.profile-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.profile-photo-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--portal-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.profile-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-photo-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--portal-border);
+  border-radius: 9px;
+  background: var(--portal-surface-muted);
+  color: var(--portal-text);
+  padding: 0.55rem 0.8rem;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-photo-upload input {
+  display: none;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--portal-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.profile-field input {
+  height: 40px;
+  border: 1px solid var(--portal-border);
+  border-radius: 9px;
+  background: var(--portal-surface-muted);
+  color: var(--portal-text);
+  padding: 0 0.75rem;
+  font-size: 13px;
+}
+
+.profile-field input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.profile-alert {
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.profile-alert-success {
+  border: 1px solid rgba(0, 192, 116, 0.3);
+  background: rgba(0, 192, 116, 0.12);
+  color: var(--portal-success);
+}
+
+.profile-alert-error {
+  border: 1px solid rgba(232, 77, 77, 0.3);
+  background: rgba(232, 77, 77, 0.12);
+  color: var(--portal-danger);
+}
+
+@media (max-width: 900px) {
+  .profile-settings-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 820px) {

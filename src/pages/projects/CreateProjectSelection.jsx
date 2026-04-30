@@ -1,4 +1,15 @@
-import { useState } from "react";
+import { createElement, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Bot,
+  Film,
+  LineChart,
+  Mail,
+  Megaphone,
+  MonitorSmartphone,
+  Palette,
+  Share2,
+} from "lucide-react";
 import OnboardingShell from "../../components/auth/OnboardingShell";
 import project1 from "../../assets/signup-assets/2_CreateProject_1@2x.png";
 import project2 from "../../assets/signup-assets/2_CreateProject_2@2x.png";
@@ -13,63 +24,73 @@ const PROJECT_OPTIONS = [
   {
     id: "branding",
     title: "Branding and Design",
-    description: "Craft identity and visuals that stand out.",
+    description: "Craft Identity. Inspire Loyalty. Drive Growth: Build a Brand That Stands Out.",
     image: project1,
-    icon: "BD",
+    icon: Palette,
+    path: "/new-projects/branding-design",
   },
   {
     id: "web",
     title: "Web Solutions",
-    description: "Build modern web experiences for growth.",
+    description: "Build. Connect. Thrive: Web Solutions Designed for Growth.",
     image: project2,
-    icon: "WEB",
+    icon: MonitorSmartphone,
+    path: "/new-projects/web-solutions",
   },
   {
     id: "marketing",
     title: "Marketing Consulting",
-    description: "Scale with precision and data-backed strategy.",
+    description: "Unify Your Strategy. Scale with Precision. Lead the Market.",
     image: project3,
-    icon: "MKT",
+    icon: LineChart,
+    path: "/new-projects/marketing",
   },
   {
     id: "social",
     title: "Social Media Management",
-    description: "Engage and grow across channels.",
+    description: "Engage. Inspire. Thrive.",
     image: project4,
-    icon: "SMM",
+    icon: Share2,
+    path: "/new-projects/social",
   },
   {
     id: "email",
     title: "Email Marketing",
-    description: "Automate campaigns and improve retention.",
+    description: "Engage. Nurture. Convert: Powered by Creative Strategy and Automation.",
     image: project5,
-    icon: "EML",
+    icon: Mail,
+    path: "/new-projects/email",
   },
   {
     id: "campaigns",
     title: "B2B & B2C Campaigns",
-    description: "Drive targeted growth with creative campaigns.",
+    description: "Drive the Right Action. Attract the Right Audience. Fuel Real Growth.",
     image: project6,
-    icon: "B2B",
+    icon: Megaphone,
+    path: "/new-projects/campaigns",
   },
   {
     id: "ai-integrations",
-    title: "AI Integrations",
-    description: "Build practical AI workflows and automations.",
+    title: "AI Integrations & Automations",
+    description: "Engage Seamlessly on Every Channel with AI solutions, AI voice Agents, AI Chatbots.",
     image: project7,
-    icon: "AI",
+    icon: Bot,
+    path: "/new-projects/ai-integrations",
   },
   {
     id: "video",
     title: "AI Video Production",
-    description: "Create cinematic AI-powered video assets.",
+    description: "Create. Automate. Captivate.",
     image: project8,
-    icon: "VID",
+    icon: Film,
+    path: "/new-projects/video",
   },
 ];
 
 export default function CreateProjectSelection() {
+  const navigate = useNavigate();
   const [selectedOption, setSelectedOption] = useState("");
+  const selectedProject = PROJECT_OPTIONS.find((option) => option.id === selectedOption);
 
   return (
     <OnboardingShell showHomeLink showLanguage={false} homePath="/home" homeLabel="Home">
@@ -77,25 +98,34 @@ export default function CreateProjectSelection() {
         <h1>Let&apos;s create a project</h1>
         <p>Choose the service you need</p>
 
-        <div className="project-grid">
-          {PROJECT_OPTIONS.map(({ id, title, description, image, icon }) => (
+        <div className="portal-service-grid project-grid">
+          {PROJECT_OPTIONS.map(({ id, title, description, image, icon: Icon }) => (
             <button
               key={id}
               type="button"
-              className={`project-card ${selectedOption === id ? "is-selected" : ""}`}
+              className={`portal-service-card project-card ${selectedOption === id ? "is-selected" : ""}`}
               onClick={() => setSelectedOption(id)}
             >
-              <img src={image} alt={title} />
-              <div className="project-card-content">
-                <span className="project-card-icon">{icon}</span>
-                <h3>{title}</h3>
-                <p>{description}</p>
+              <div className="portal-service-image">
+                <img src={image} alt={title} />
+              </div>
+              <div className="portal-service-body">
+                <span className="portal-service-icon">
+                  {createElement(Icon, { size: 18 })}
+                </span>
+                <h3 className="portal-service-title">{title}</h3>
+                <p className="portal-service-desc">{description}</p>
               </div>
             </button>
           ))}
         </div>
 
-        <button type="button" className="project-start-btn" disabled={!selectedOption}>
+        <button
+          type="button"
+          className="project-start-btn"
+          disabled={!selectedProject}
+          onClick={() => selectedProject && navigate(selectedProject.path)}
+        >
           Start my request
         </button>
       </section>

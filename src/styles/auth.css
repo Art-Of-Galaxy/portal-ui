@@ -177,6 +177,38 @@
   outline-offset: 1px;
 }
 
+.auth-password-field {
+  position: relative;
+  width: 70%;
+  align-self: center;
+}
+
+.auth-password-field .auth-field {
+  width: 100%;
+  padding-right: 2.6rem;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--auth-input-text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.auth-password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .auth-error {
   border-radius: 0.7rem;
   border: 1px solid rgba(255, 99, 99, 0.4);
@@ -569,6 +601,22 @@
   padding: 0 1rem;
 }
 
+.onboard-next-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.onboard-error {
+  width: min(560px, 88vw);
+  margin: 0 auto 0.8rem;
+  border-radius: 10px;
+  border: 1px solid rgba(232, 77, 77, 0.35);
+  background: rgba(232, 77, 77, 0.12);
+  color: #9f1f1f;
+  padding: 0.7rem 0.9rem;
+  font-size: 13px;
+}
+
 .onboard-card-done {
   text-align: center;
   width: min(520px, 88vw);
@@ -593,43 +641,60 @@
 }
 
 .project-select-wrap {
-  width: min(900px, 94vw);
+  width: min(1590px, 94vw);
   text-align: center;
+  --portal-card-bg: rgba(255, 255, 255, 0.95);
+  --portal-border: rgba(17, 44, 75, 0.14);
+  --portal-border-strong: rgba(85, 64, 255, 0.45);
+  --portal-surface-muted: rgba(248, 250, 252, 0.95);
+  --portal-text: #122139;
+  --portal-text-muted: #60728d;
+  --portal-accent: linear-gradient(90deg, #5540ff 0%, #00ff89 100%);
+  --portal-accent-solid: #5540ff;
+  --portal-shadow-sm: 0 10px 20px rgba(19, 34, 59, 0.12);
+  --portal-shadow-md: 0 16px 30px rgba(19, 34, 59, 0.18);
+}
+
+.auth-theme-dark .project-select-wrap {
+  --portal-card-bg: rgba(20, 28, 51, 0.94);
+  --portal-border: rgba(255, 255, 255, 0.12);
+  --portal-border-strong: rgba(0, 255, 137, 0.38);
+  --portal-surface-muted: rgba(24, 33, 65, 0.95);
+  --portal-text: #f4f7ff;
+  --portal-text-muted: rgba(228, 236, 255, 0.72);
+  --portal-shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);
+  --portal-shadow-md: 0 18px 34px rgba(0, 0, 0, 0.38);
 }
 
 .project-select-wrap h1 {
   margin: 0;
-  font-size: 42px;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 600;
 }
 
 .project-select-wrap > p {
-  margin: 0.3rem 0 1.3rem;
-  font-size: 16px;
+  margin: 0.4rem 0 2rem;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--auth-secondary-text);
 }
 
-.project-grid {
+.project-select-wrap .project-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(180px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.2rem;
   align-items: stretch;
+  margin-top: 1rem;
 }
 
 .project-card {
-  display: flex;
-  flex-direction: column;
   height: 100%;
-  border: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 10px 20px rgba(19, 34, 59, 0.16);
-  cursor: pointer;
-  text-align: left;
-  padding: 0;
 }
 
 .project-card.is-selected {
-  outline: 2px solid #4d5cff;
+  border-color: var(--portal-accent-solid);
+  box-shadow: 0 0 0 3px rgba(85, 64, 255, 0.18), var(--portal-shadow-md);
+  transform: translateY(-2px);
 }
 
 .project-card img {
@@ -680,19 +745,23 @@
 }
 
 .project-start-btn {
-  margin-top: 1rem;
+  margin-top: 1.4rem;
   min-width: 170px;
-  height: 2.2rem;
+  height: 2.4rem;
   border-radius: 9px;
   border: 0;
-  background: rgba(16, 43, 76, 0.14);
-  color: rgba(16, 43, 76, 0.7);
+  background: linear-gradient(90deg, #5540ff 0%, #00ff89 100%);
+  color: #f5fbff;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 12px 24px rgba(66, 68, 188, 0.28);
 }
 
 .project-start-btn:disabled {
+  background: rgba(16, 43, 76, 0.14);
+  color: rgba(16, 43, 76, 0.7);
+  box-shadow: none;
   opacity: 0.9;
   cursor: not-allowed;
 }
@@ -756,7 +825,7 @@
 }
 
 @media (max-width: 980px) {
-  .project-grid {
+  .project-select-wrap .project-grid {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
   }
 
@@ -779,7 +848,7 @@
     padding-top: 5.8rem;
   }
 
-  .project-grid {
+  .project-select-wrap .project-grid {
     grid-template-columns: 1fr;
   }
 

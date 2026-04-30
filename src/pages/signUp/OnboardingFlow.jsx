@@ -10,6 +10,7 @@ import {
   saveOnboardingProgress,
   setCurrentOnboardingUser,
 } from "../../utils/onboardingProgress";
+import { apiServices } from "../../services/apiServices";
 
 const GOAL_OPTIONS = [
   "Increase Brand Awareness",
@@ -60,7 +61,7 @@ function ProgressHeader({ step }) {
   );
 }
 
-function StepCard({ title, description, children, onBack, onNext, nextLabel = "Next" }) {
+function StepCard({ title, description, children, onBack, onNext, nextLabel = "Next", disabled = false }) {
   const nextButtonText = nextLabel === "Done" ? nextLabel : `${nextLabel} ->`;
 
   return (
@@ -72,7 +73,7 @@ function StepCard({ title, description, children, onBack, onNext, nextLabel = "N
         <button type="button" className="onboard-back-btn" onClick={onBack}>
           {"<-"}
         </button>
-        <button type="button" className="onboard-next-btn" onClick={onNext}>
+        <button type="button" className="onboard-next-btn" onClick={onNext} disabled={disabled}>
           {nextButtonText}
         </button>
       </div>
@@ -91,9 +92,24 @@ export default function OnboardingFlow() {
 
   const [step, setStep] = useState(() => clampStep(stepFromQuery || pendingProgress?.step || 1));
   const [isDone, setIsDone] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [business, setBusiness] = useState({
+    primary_contact_name: localStorage.getItem("user_name") || "",
+    brand_company_name: "",
+    website_url: "",
+    phone: "",
+    preferred_communication: "",
+    offering_type: "",
+    industry: "",
+    social_media_handles: "",
+  });
   const [goals, setGoals] = useState([]);
+  const [goalOther, setGoalOther] = useState("");
   const [services, setServices] = useState([]);
+  const [serviceOther, setServiceOther] = useState("");
   const [assets, setAssets] = useState([]);
+  const [assetUrl, setAssetUrl] = useState("");
 
   useEffect(() => {
     if (userEmail) {
@@ -131,12 +147,38 @@ export default function OnboardingFlow() {
     ));
   }, [services]);
 
-  const handleNext = () => {
+  const updateBusiness = (key, value) => {
+    setBusiness((previous) => ({ ...previous, [key]: value }));
+  };
+
+  const buildOnboardingPayload = () => ({
+    business,
+    goals,
+    goal_other: goalOther,
+    interested_services: services,
+    service_other: serviceOther,
+    brand_assets: assets,
+    asset_url: assetUrl,
+    completed_at: new Date().toISOString(),
+  });
+
+  const handleNext = async () => {
     if (step < TOTAL_STEPS) {
       setStep((previousStep) => previousStep + 1);
       return;
     }
-    setIsDone(true);
+
+    setSaving(true);
+    setError("");
+    try {
+      await apiServices.save_onboarding(buildOnboardingPayload());
+      localStorage.setItem("aog_onboarding_data", JSON.stringify(buildOnboardingPayload()));
+      setIsDone(true);
+    } catch (err) {
+      setError(err?.message || "Unable to save onboarding details.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleBack = () => {
@@ -148,30 +190,32 @@ export default function OnboardingFlow() {
   const stepContent = (
     <>
       <ProgressHeader step={step} />
+      {error ? <p className="onboard-error">{error}</p> : null}
       {step === 1 ? (
         <StepCard
           title="Let Us Get to Know Your Brand"
           description="Please provide a few essential details so we can better understand your business and tailor your experience."
           onBack={handleBack}
           onNext={handleNext}
+          disabled={saving}
         >
-          <input className="onboard-input" placeholder="Primary Contact Name" />
-          <input className="onboard-input" placeholder="Brand/Company Name" />
-          <input className="onboard-input" placeholder="Website URL" />
-          <input className="onboard-input" placeholder="Phone Number" />
-          <input className="onboard-input" placeholder="Preferred Method of Communication" />
-          <select className="onboard-input">
-            <option>Services or Product</option>
-            <option>Service</option>
-            <option>Product</option>
+          <input className="onboard-input" placeholder="Primary Contact Name" value={business.primary_contact_name} onChange={(e) => updateBusiness("primary_contact_name", e.target.value)} />
+          <input className="onboard-input" placeholder="Brand/Company Name" value={business.brand_company_name} onChange={(e) => updateBusiness("brand_company_name", e.target.value)} />
+          <input className="onboard-input" placeholder="Website URL" value={business.website_url} onChange={(e) => updateBusiness("website_url", e.target.value)} />
+          <input className="onboard-input" placeholder="Phone Number" value={business.phone} onChange={(e) => updateBusiness("phone", e.target.value)} />
+          <input className="onboard-input" placeholder="Preferred Method of Communication" value={business.preferred_communication} onChange={(e) => updateBusiness("preferred_communication", e.target.value)} />
+          <select className="onboard-input" value={business.offering_type} onChange={(e) => updateBusiness("offering_type", e.target.value)}>
+            <option value="">Services or Product</option>
+            <option value="Service">Service</option>
+            <option value="Product">Product</option>
           </select>
-          <select className="onboard-input">
-            <option>Industry/Market Segment</option>
-            <option>Technology</option>
-            <option>Retail</option>
-            <option>Education</option>
+          <select className="onboard-input" value={business.industry} onChange={(e) => updateBusiness("industry", e.target.value)}>
+            <option value="">Industry/Market Segment</option>
+            <option value="Technology">Technology</option>
+            <option value="Retail">Retail</option>
+            <option value="Education">Education</option>
           </select>
-          <input className="onboard-input" placeholder="Social Media Handles (if applicable)" />
+          <input className="onboard-input" placeholder="Social Media Handles (if applicable)" value={business.social_media_handles} onChange={(e) => updateBusiness("social_media_handles", e.target.value)} />
         </StepCard>
       ) : null}
 
@@ -181,6 +225,7 @@ export default function OnboardingFlow() {
           description="Let us know what you aim to achieve in the next 1 to 6 months so we can align strategy and execution."
           onBack={handleBack}
           onNext={handleNext}
+          disabled={saving}
         >
           {GOAL_OPTIONS.map((goal) => (
             <button
@@ -192,7 +237,7 @@ export default function OnboardingFlow() {
               {goal}
             </button>
           ))}
-          <input className="onboard-input" placeholder="Other:" />
+          <input className="onboard-input" placeholder="Other:" value={goalOther} onChange={(e) => setGoalOther(e.target.value)} />
         </StepCard>
       ) : null}
 
@@ -202,9 +247,10 @@ export default function OnboardingFlow() {
           description="Choose the services you plan to request or explore."
           onBack={handleBack}
           onNext={handleNext}
+          disabled={saving}
         >
           <div className="onboard-grid-two">{serviceGrid}</div>
-          <input className="onboard-input onboard-grid-span" placeholder="Other:" />
+          <input className="onboard-input onboard-grid-span" placeholder="Other:" value={serviceOther} onChange={(e) => setServiceOther(e.target.value)} />
         </StepCard>
       ) : null}
 
@@ -214,7 +260,8 @@ export default function OnboardingFlow() {
           description="If you have existing brand materials, indicate what is available. If not, we can help you build from scratch."
           onBack={handleBack}
           onNext={handleNext}
-          nextLabel="Done"
+          nextLabel={saving ? "Saving..." : "Done"}
+          disabled={saving}
         >
           <div className="onboard-grid-two">
             {ASSET_OPTIONS.map((asset) => (
@@ -231,7 +278,7 @@ export default function OnboardingFlow() {
           <p className="onboard-helper-text">
             Upload files directly through the portal or provide links below:
           </p>
-          <input className="onboard-input onboard-grid-span" placeholder="Paste a URL" />
+          <input className="onboard-input onboard-grid-span" placeholder="Paste a URL" value={assetUrl} onChange={(e) => setAssetUrl(e.target.value)} />
         </StepCard>
       ) : null}
     </>

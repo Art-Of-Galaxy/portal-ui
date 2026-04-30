@@ -2,7 +2,12 @@ import { fetchWithConfig } from '../utils/authHelper';
 
 export const apiServices = {
     get_projects: async () => {
-        const response = await fetchWithConfig('notion/get_projects', { method: 'POST' });
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const response = await fetchWithConfig('notion/get_projects', {
+            method: 'POST',
+            body: { user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
         return response;
     },
     get_tasks: async () => {
@@ -10,9 +15,10 @@ export const apiServices = {
         return response;
     },
     add_project: async (projectData) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
         const response = await fetchWithConfig('notion/add_project', {
             method: 'POST',
-            body: projectData,
+            body: { ...projectData, user_email: userEmail },
             headers: { 'Content-Type': 'application/json' },
         });
         return response;
@@ -52,6 +58,36 @@ export const apiServices = {
         const response = await fetchWithConfig('notion/get_project_by_id', {
             method: 'POST',
             body: { id, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
+    },
+    get_profile: async () => {
+        const response = await fetchWithConfig('authentication/profile', { method: 'GET' });
+        return response;
+    },
+    update_profile: async (profile) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const response = await fetchWithConfig('authentication/profile', {
+            method: 'PUT',
+            body: { ...profile, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
+    },
+    update_password: async ({ current_password, new_password }) => {
+        const response = await fetchWithConfig('authentication/profile/password', {
+            method: 'PUT',
+            body: { current_password, new_password },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
+    },
+    save_onboarding: async (onboarding) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const response = await fetchWithConfig('authentication/onboarding', {
+            method: 'POST',
+            body: { onboarding, user_email: userEmail },
             headers: { 'Content-Type': 'application/json' },
         });
         return response;

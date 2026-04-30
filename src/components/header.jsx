@@ -14,6 +14,7 @@ import { useTheme } from "../context/ThemeContext";
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const userName = localStorage.getItem("user_name") || "Andrey";
+  const profilePhotoUrl = localStorage.getItem("profile_photo_url");
   const initial = useMemo(() => (userName[0] || "A").toUpperCase(), [userName]);
 
   return (
@@ -52,7 +53,7 @@ export function Header() {
           {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         <button type="button" className="portal-icon-btn is-avatar" aria-label="Profile">
-          {initial}
+          {profilePhotoUrl ? <img src={profilePhotoUrl} alt="" /> : initial}
         </button>
       </div>
     </header>

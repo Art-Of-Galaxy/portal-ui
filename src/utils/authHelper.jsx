@@ -5,6 +5,14 @@ export const fetchWithConfig = async (endpoints, { method, headers, body } = {})
         'Content-Type': 'application/json',
         ...headers,
     };
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+    if (token && !finalHeaders.Authorization) {
+        finalHeaders.Authorization = `Bearer ${token}`;
+    }
+    const userEmail = localStorage.getItem('user_email');
+    if (userEmail && !finalHeaders['X-User-Email']) {
+        finalHeaders['X-User-Email'] = userEmail;
+    }
 
     const init = { method: verb, headers: finalHeaders };
     if (body !== undefined && verb !== 'GET' && verb !== 'HEAD') {

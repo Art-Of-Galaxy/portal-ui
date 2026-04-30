@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import AuthShell from "../../components/auth/AuthShell";
+import PasswordField from "../../components/auth/PasswordField";
 import { authAppearance } from "../../config/authAppearance";
 import { signUpUser } from "../../redux/signUpSlice";
 
@@ -85,13 +86,10 @@ const SignUp = () => {
             disabled={loading}
           />
 
-          <input
+          <PasswordField
             name="password"
-            type="password"
-            required
             autoComplete="new-password"
             placeholder="Create your password"
-            className="auth-field"
             disabled={loading}
           />
 
