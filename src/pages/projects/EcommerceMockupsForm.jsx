@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarCheck, ShoppingBag, Upload, X } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Paperclip, ShoppingBag, X } from "lucide-react";
+import FileUploadButton from "../../components/ui/FileUploadButton";
 import { fetchWithConfig } from "../../utils/authHelper";
 import { apiServices } from "../../services/apiServices";
 import EcommerceMockupsView from "./EcommerceMockupsView";
@@ -56,9 +57,12 @@ const initialForm = {
   certifications: "",
   target_customer: "",
   has_brand_guidelines: "",
+  brand_guidelines_uploads: [],
   background_styles: [],
   background_styles_other: "",
   reference_links: ["", "", ""],
+  reference_uploads: [],
+  product_image_uploads: [],
   mockup_types: [],
   mockup_types_other: "",
   highlight_features: "",
@@ -287,11 +291,6 @@ export default function EcommerceMockupsForm() {
         Back to Branding &amp; Design
       </button>
 
-      <div className="portal-create-header">
-        <h1 className="portal-create-title">Let&apos;s create a project</h1>
-        <p className="portal-create-sub">Choose the service you need</p>
-      </div>
-
       <form className="bg-form-shell" onSubmit={handleSubmit}>
         <div className="bg-form-header">
           <span className="bg-form-header-tile">
@@ -451,17 +450,42 @@ export default function EcommerceMockupsForm() {
                     High-quality photos of your product (JPG, PNG, or PSD preferred)
                   </span>
                 </label>
-                <button
-                  type="button"
-                  className="branding-btn-primary"
-                  style={{ height: 36, minWidth: 0, padding: "0 1.4rem", fontSize: 13 }}
-                  onClick={() =>
-                    setError("File upload is coming soon — describe your product in detail above for now.")
+                <FileUploadButton
+                  category="Branding & Design"
+                  serviceType="ecommerce_mockups"
+                  projectName={form.product_name || "E-Commerce Mockups Request"}
+                  accept="image/*,application/pdf,.psd"
+                  multiple
+                  onUploaded={({ url, name }) =>
+                    update("product_image_uploads", [
+                      ...form.product_image_uploads,
+                      { url, name },
+                    ])
                   }
-                >
-                  <Upload size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
-                  Upload
-                </button>
+                  onError={(msg) => setError(msg)}
+                />
+                {form.product_image_uploads.length ? (
+                  <ul className="upload-chip-list">
+                    {form.product_image_uploads.map((f, i) => (
+                      <li key={i} className="upload-chip">
+                        <Paperclip size={12} />
+                        <a href={f.url} target="_blank" rel="noreferrer">{f.name || `file-${i + 1}`}</a>
+                        <button
+                          type="button"
+                          aria-label="Remove"
+                          onClick={() =>
+                            update(
+                              "product_image_uploads",
+                              form.product_image_uploads.filter((_, j) => j !== i)
+                            )
+                          }
+                        >
+                          <X size={11} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             </section>
 
@@ -482,18 +506,43 @@ export default function EcommerceMockupsForm() {
                     <strong style={{ marginRight: 4 }}>Yes:</strong>
                     <span style={{ color: "var(--portal-text-muted)" }}>Upload file</span>
                   </label>
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    style={{ height: 36, minWidth: 0, padding: "0 1.4rem", fontSize: 13 }}
-                    onClick={() =>
-                      setError("File upload is coming soon — describe your brand cues in the notes for now.")
+                  <FileUploadButton
+                    category="Branding & Design"
+                    serviceType="ecommerce_mockups"
+                    projectName={form.product_name || "E-Commerce Mockups Request"}
+                    accept="image/*,application/pdf"
+                    multiple
+                    onUploaded={({ url, name }) =>
+                      update("brand_guidelines_uploads", [
+                        ...form.brand_guidelines_uploads,
+                        { url, name },
+                      ])
                     }
-                  >
-                    <Upload size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
-                    Upload
-                  </button>
+                    onError={(msg) => setError(msg)}
+                  />
                 </div>
+                {form.brand_guidelines_uploads.length ? (
+                  <ul className="upload-chip-list">
+                    {form.brand_guidelines_uploads.map((f, i) => (
+                      <li key={i} className="upload-chip">
+                        <Paperclip size={12} />
+                        <a href={f.url} target="_blank" rel="noreferrer">{f.name || `file-${i + 1}`}</a>
+                        <button
+                          type="button"
+                          aria-label="Remove"
+                          onClick={() =>
+                            update(
+                              "brand_guidelines_uploads",
+                              form.brand_guidelines_uploads.filter((_, j) => j !== i)
+                            )
+                          }
+                        >
+                          <X size={11} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 <label className="bg-form-checkbox" style={{ marginTop: 6 }}>
                   <input
                     type="radio"
@@ -569,18 +618,43 @@ export default function EcommerceMockupsForm() {
                     <span style={{ fontSize: 12, color: "var(--portal-text-muted)", minWidth: 110 }}>
                       Or upload files:
                     </span>
-                    <button
-                      type="button"
-                      className="branding-btn-primary"
-                      style={{ height: 36, minWidth: 0, padding: "0 1.4rem", fontSize: 13 }}
-                      onClick={() =>
-                        setError("File upload is coming soon — paste reference links above for now.")
+                    <FileUploadButton
+                      category="Branding & Design"
+                      serviceType="ecommerce_mockups"
+                      projectName={form.product_name || "E-Commerce Mockups Request"}
+                      accept="image/*,application/pdf"
+                      multiple
+                      onUploaded={({ url, name }) =>
+                        update("reference_uploads", [
+                          ...form.reference_uploads,
+                          { url, name },
+                        ])
                       }
-                    >
-                      <Upload size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
-                      Upload
-                    </button>
+                      onError={(msg) => setError(msg)}
+                    />
                   </div>
+                  {form.reference_uploads.length ? (
+                    <ul className="upload-chip-list">
+                      {form.reference_uploads.map((f, i) => (
+                        <li key={i} className="upload-chip">
+                          <Paperclip size={12} />
+                          <a href={f.url} target="_blank" rel="noreferrer">{f.name || `file-${i + 1}`}</a>
+                          <button
+                            type="button"
+                            aria-label="Remove"
+                            onClick={() =>
+                              update(
+                                "reference_uploads",
+                                form.reference_uploads.filter((_, j) => j !== i)
+                              )
+                            }
+                          >
+                            <X size={11} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               </div>
             </section>

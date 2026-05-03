@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, FolderKanban, Plus, Search } from "lucide-react";
+import { ChevronRight, FolderKanban, Plus, Search, Trash2 } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 
 function formatDate(value) {
@@ -17,6 +17,13 @@ function statusClass(label) {
   return "status-pending";
 }
 
+function formatServiceType(value) {
+  if (!value) return "Other";
+  return String(value)
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 const ALL = "__all__";
 
 export default function Projects() {
@@ -26,6 +33,8 @@ export default function Projects() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState(ALL);
+  const [serviceFilter, setServiceFilter] = useState(ALL);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,10 +64,32 @@ export default function Projects() {
     return Array.from(set);
   }, [projects]);
 
+  // Service-types visible in the current category selection — keeps the chip
+  // row tight when the user has only requested certain services.
+  const services = useMemo(() => {
+    const map = new Map();
+    projects.forEach((p) => {
+      if (categoryFilter !== ALL && p.category !== categoryFilter) return;
+      if (!p.service_type) return;
+      if (!map.has(p.service_type)) map.set(p.service_type, formatServiceType(p.service_type));
+    });
+    return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
+  }, [projects, categoryFilter]);
+
+  // If the chosen sub-service no longer exists in the current category, fall
+  // back to "All" automatically so the list doesn't go empty silently.
+  useEffect(() => {
+    if (serviceFilter === ALL) return;
+    if (!services.some((s) => s.id === serviceFilter)) {
+      setServiceFilter(ALL);
+    }
+  }, [services, serviceFilter]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return projects.filter((p) => {
       if (categoryFilter !== ALL && p.category !== categoryFilter) return false;
+      if (serviceFilter !== ALL && p.service_type !== serviceFilter) return false;
       if (!q) return true;
       const hay = [
         p.project_name,
@@ -72,7 +103,28 @@ export default function Projects() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [projects, search, categoryFilter]);
+  }, [projects, search, categoryFilter, serviceFilter]);
+
+  const handleDelete = async (project, event) => {
+    event.stopPropagation();
+    if (!project?.id || deletingId) return;
+    const confirmed = window.confirm(
+      `Delete "${project.project_name || "this project"}"? This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(project.id);
+    setError("");
+    try {
+      const res = await apiServices.delete_project(project.id);
+      if (!res?.success) throw new Error(res?.message || "Delete failed");
+      setProjects((prev) => prev.filter((p) => p.id !== project.id));
+    } catch (err) {
+      setError(err?.message || "Failed to delete project");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="portal-page">
@@ -122,6 +174,29 @@ export default function Projects() {
         </div>
       </div>
 
+      {services.length ? (
+        <div className="proj-filter proj-filter-secondary">
+          <span className="proj-filter-label">Service:</span>
+          <button
+            type="button"
+            className={serviceFilter === ALL ? "is-active" : ""}
+            onClick={() => setServiceFilter(ALL)}
+          >
+            All
+          </button>
+          {services.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={serviceFilter === s.id ? "is-active" : ""}
+              onClick={() => setServiceFilter(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       {error ? (
         <div className="portal-card">
           <p className="portal-card-copy" style={{ color: "var(--portal-danger)" }}>{error}</p>
@@ -146,11 +221,18 @@ export default function Projects() {
       ) : (
         <div className="proj-list">
           {filtered.map((p) => (
-            <button
+            <div
               key={p.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               className="proj-row"
               onClick={() => navigate(`/my-projects/${p.id}`)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  navigate(`/my-projects/${p.id}`);
+                }
+              }}
             >
               <div className="proj-row-name">
                 <strong>{p.project_name || "Untitled project"}</strong>
@@ -169,8 +251,18 @@ export default function Projects() {
               <span className="proj-row-meta">
                 {formatDate(p.created_at || p.created_date)}
               </span>
+              <button
+                type="button"
+                className="proj-row-delete"
+                onClick={(event) => handleDelete(p, event)}
+                disabled={deletingId === p.id}
+                aria-label="Delete project"
+                title="Delete project"
+              >
+                <Trash2 size={14} />
+              </button>
               <ChevronRight size={16} className="proj-row-arrow" />
-            </button>
+            </div>
           ))}
         </div>
       )}

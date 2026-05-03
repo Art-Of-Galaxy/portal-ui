@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -10,7 +9,6 @@ import {
   ShoppingBag,
   Pencil,
 } from "lucide-react";
-import heroBackground from "../../assets/signup-assets/2_CreateProject_1@2x.png";
 
 const TOOLS = [
   {
@@ -65,12 +63,6 @@ const TOOLS = [
 
 export default function BrandingDesign() {
   const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState(null);
-
-  const handleGetStarted = () => {
-    const tool = TOOLS.find((t) => t.id === selectedId);
-    if (tool) navigate(tool.path);
-  };
 
   return (
     <div className="portal-page">
@@ -89,11 +81,7 @@ export default function BrandingDesign() {
       </div>
 
       <div className="branding-panel">
-        <div
-          className="branding-panel-hero"
-          style={{ backgroundImage: `url(${heroBackground})` }}
-        >
-          <div className="branding-panel-hero-fade" />
+        <div className="branding-panel-hero">
           <div className="branding-panel-hero-content">
             <span className="branding-panel-hero-tile">
               <Pencil size={22} />
@@ -108,12 +96,12 @@ export default function BrandingDesign() {
         </div>
 
         <div className="branding-tool-grid">
-          {TOOLS.map(({ id, title, description, icon: Icon, accent }) => (
+          {TOOLS.map(({ id, title, description, icon: Icon, accent, path }) => (
             <button
               key={id}
               type="button"
-              className={`branding-tool-card ${selectedId === id ? "is-selected" : ""}`}
-              onClick={() => setSelectedId(id)}
+              className="branding-tool-card"
+              onClick={() => navigate(path)}
             >
               <div className="branding-tool-image" style={{ background: accent }} />
               <div className="branding-tool-body">
@@ -134,14 +122,6 @@ export default function BrandingDesign() {
             onClick={() => navigate("/new-projects")}
           >
             Return
-          </button>
-          <button
-            type="button"
-            className="branding-btn-secondary"
-            disabled={!selectedId}
-            onClick={handleGetStarted}
-          >
-            Get started
           </button>
         </div>
       </div>

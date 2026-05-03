@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, FolderKanban } from "lucide-react";
+import { ArrowLeft, FolderKanban, Trash2 } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 import BrandGuidelinesView from "./BrandGuidelinesView";
 import RebrandingView from "./RebrandingView";
 import EcommerceMockupsView from "./EcommerceMockupsView";
+import LogoDesignView from "./LogoDesignView";
 
 function formatDate(value) {
   if (!value) return "—";
@@ -36,6 +37,25 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState(null);
   const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!project?.id || deleting) return;
+    const confirmed = window.confirm(
+      `Delete "${project.project_name || "this project"}"? This can't be undone.`
+    );
+    if (!confirmed) return;
+    setDeleting(true);
+    setError("");
+    try {
+      const res = await apiServices.delete_project(project.id);
+      if (!res?.success) throw new Error(res?.message || "Delete failed");
+      navigate("/my-projects");
+    } catch (err) {
+      setError(err?.message || "Failed to delete project");
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -127,6 +147,18 @@ export default function ProjectDetail() {
         />
       );
     }
+    if (serviceType === "logo_design") {
+      return (
+        <LogoDesignView
+          images={output.images || []}
+          prompt={output.prompt}
+          brandName={project.project_name}
+          model={project.model}
+          seed={output.seed}
+          errors={output.errors}
+        />
+      );
+    }
     return (
       <div className="portal-card">
         <h3 className="portal-card-heading">Output</h3>
@@ -170,7 +202,32 @@ export default function ProjectDetail() {
             </span>
           </div>
         </div>
+        <button
+          type="button"
+          className="proj-detail-delete"
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          <Trash2 size={14} />
+          {deleting ? "Deleting…" : "Delete project"}
+        </button>
       </div>
+
+      {error ? (
+        <div
+          style={{
+            background: "rgba(232,77,77,0.1)",
+            border: "1px solid rgba(232,77,77,0.3)",
+            color: "var(--portal-danger)",
+            padding: "0.6rem 0.9rem",
+            borderRadius: 8,
+            margin: "0.6rem 0 1rem",
+            fontSize: 13,
+          }}
+        >
+          {error}
+        </div>
+      ) : null}
 
       {renderOutput()}
     </div>

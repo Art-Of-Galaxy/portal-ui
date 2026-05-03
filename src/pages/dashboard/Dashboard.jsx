@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowDownUp, Clock, FilePlus2, LayoutGrid, List, Star } from "lucide-react";
+import { ArrowDownUp, Clock, FilePlus2, Loader2, LayoutGrid, List, Star, Trash2 } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 
 const TABS = [
@@ -14,6 +14,24 @@ function formatDate(value) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
   return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+}
+
+function formatRelative(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const diffMs = Date.now() - d.getTime();
+  const min = Math.round(diffMs / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} minute${min === 1 ? "" : "s"} ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr} hour${hr === 1 ? "" : "s"} ago`;
+  const day = Math.round(hr / 24);
+  if (day < 30) return `${day} day${day === 1 ? "" : "s"} ago`;
+  const mo = Math.round(day / 30);
+  if (mo < 12) return `${mo} month${mo === 1 ? "" : "s"} ago`;
+  const yr = Math.round(mo / 12);
+  return `${yr} year${yr === 1 ? "" : "s"} ago`;
 }
 
 function formatServiceType(value) {
@@ -54,6 +72,29 @@ export function Dashboard() {
   const [tab, setTab] = useState("all");
   const [view, setView] = useState("grid");
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+
+  const handleDelete = async (project, event) => {
+    event.stopPropagation();
+    if (!project?.id || deletingId) return;
+    const confirmed = window.confirm(
+      `Delete "${project.project_name || "this project"}"? This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(project.id);
+    setDeleteError("");
+    try {
+      const res = await apiServices.delete_project(project.id);
+      if (!res?.success) throw new Error(res?.message || "Delete failed");
+      setProjects((prev) => prev.filter((p) => p.id !== project.id));
+    } catch (err) {
+      setDeleteError(err?.message || "Failed to delete project");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -116,38 +157,98 @@ export function Dashboard() {
         </div>
       </div>
 
-      {view === "grid" ? (
+      {deleteError ? (
+        <div
+          style={{
+            background: "rgba(232,77,77,0.1)",
+            border: "1px solid rgba(232,77,77,0.3)",
+            color: "var(--portal-danger)",
+            padding: "0.6rem 0.9rem",
+            borderRadius: 8,
+            margin: "0.6rem 0",
+            fontSize: 13,
+          }}
+        >
+          {deleteError}
+        </div>
+      ) : null}
+
+      {loading && view === "grid" ? (
+        <div className="portal-project-grid">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="portal-project-card portal-project-card-skeleton">
+              <div className="portal-project-card-body">
+                <div className="skeleton-line skeleton-line-lg" />
+                <div className="skeleton-line skeleton-line-sm" />
+                <div className="skeleton-line" />
+                <div className="skeleton-line skeleton-line-block" />
+              </div>
+            </div>
+          ))}
+          <div className="portal-project-card portal-project-loader">
+            <Loader2 size={20} className="portal-spin" />
+            <span>Loading recent projects…</span>
+          </div>
+        </div>
+      ) : view === "grid" ? (
         <div className="portal-project-grid">
           {filtered.map((p, i) => {
             const details = getProjectDetails(p);
+            const description =
+              p.tags ||
+              (details.category && details.category !== "General"
+                ? `Saved under ${details.category}.`
+                : "AI-generated brief saved to this project.");
+            const lastSeenAt = p.updated_at || details.created;
             return (
-              <button
+              <div
                 key={p.id ?? i}
-                type="button"
-                className={`portal-project-card ${i === 0 ? "is-accent" : ""}`}
+                role="button"
+                tabIndex={0}
+                className="portal-project-card"
                 onClick={() => navigate(`/my-projects/${p.id ?? ""}`)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    navigate(`/my-projects/${p.id ?? ""}`);
+                  }
+                }}
               >
-                <h3 className="portal-project-title">{details.title}</h3>
-                <p className="portal-project-meta">
-                  Created: {formatDate(details.created) || "Not set"}
-                </p>
-                {/*
-                <div className="portal-project-details">
-                  <p><strong>Service:</strong> {details.service}</p>
-                  <p><strong>Category:</strong> {details.category}</p>
-                  <p><strong>Status:</strong> {details.status}</p>
-                  <p><strong>Priority:</strong> {details.priority}</p>
-                  {details.due ? <p><strong>Due:</strong> {formatDate(details.due)}</p> : null}
-                  {details.owner ? <p><strong>Owner:</strong> {details.owner}</p> : null}
-                  {details.model ? <p><strong>Model:</strong> {details.model}</p> : null}
-                  {details.tags ? <p><strong>Tags:</strong> {details.tags}</p> : null}
+                <div className="portal-project-card-body">
+                  <div className="portal-project-card-header">
+                    <h3 className="portal-project-title">{details.service}</h3>
+                    <p className="portal-project-meta">
+                      Created: {formatDate(details.created) || "Not set"}
+                    </p>
+                  </div>
+
+                  {/* <hr className="portal-project-divider" /> */}
+
+                  <div className="portal-project-card-body-wrapper">
+
+                    <p className="portal-project-brand">
+                      <strong>Brand:</strong> {details.title}
+                    </p>
+                    <p className="portal-project-body">{description}</p>
+
+                    <div className="portal-project-footer">
+                      <span>Last viewed {formatRelative(lastSeenAt) || "recently"}</span>
+                      <button
+                        type="button"
+                        className="portal-project-menu-btn"
+                        onClick={(event) => handleDelete(p, event)}
+                        disabled={deletingId === p.id}
+                        aria-label="Delete project"
+                        title="Delete project"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+
+
+                  </div>
                 </div>
-                */}
-                <div className="portal-project-footer">
-                  <span>{details.service}</span>
-                  <span>...</span>
-                </div>
-              </button>
+              </div>
             );
           })}
           <button

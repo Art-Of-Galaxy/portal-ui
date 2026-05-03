@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, CalendarCheck, Upload, X } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarCheck, Paperclip, X } from "lucide-react";
 import { fetchWithConfig } from "../../utils/authHelper";
 import { apiServices } from "../../services/apiServices";
 import BrandGuidelinesView from "./BrandGuidelinesView";
+import FileUploadButton from "../../components/ui/FileUploadButton";
 import { useLoading } from "../../context/LoadingContext";
 
 const BRAND_GUIDELINES_LOADER_MESSAGES = [
@@ -78,6 +79,7 @@ const initialForm = {
   custom_colors: [],
   selected_typography: [],
   visual_elements: "",
+  visual_uploads: [],
   deliverables: [],
   deliverables_other: "",
   additional_notes: "",
@@ -262,11 +264,6 @@ export default function BrandGuidelinesForm() {
         <ArrowLeft size={16} />
         Back to Branding &amp; Design
       </button>
-
-      <div className="portal-create-header">
-        <h1 className="portal-create-title">Let&apos;s create a project</h1>
-        <p className="portal-create-sub">Choose the service you need</p>
-      </div>
 
       <form className="bg-form-shell" onSubmit={handleSubmit}>
         <div className="bg-form-header">
@@ -625,18 +622,43 @@ export default function BrandGuidelinesForm() {
                 />
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
                   <span style={{ fontSize: 12, color: "var(--portal-text-muted)" }}>Or upload files:</span>
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    style={{ height: 36, minWidth: 0, padding: "0 1.2rem", fontSize: 13 }}
-                    onClick={() =>
-                      setError("File upload is coming soon — describe references in the field above for now.")
+                  <FileUploadButton
+                    category="Branding & Design"
+                    serviceType="brand_guidelines"
+                    projectName={form.brand_name || "Brand Guidelines Request"}
+                    accept="image/*,application/pdf"
+                    multiple
+                    onUploaded={({ url, name }) =>
+                      update("visual_uploads", [
+                        ...form.visual_uploads,
+                        { url, name },
+                      ])
                     }
-                  >
-                    <Upload size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
-                    Upload
-                  </button>
+                    onError={(msg) => setError(msg)}
+                  />
                 </div>
+                {form.visual_uploads.length ? (
+                  <ul className="upload-chip-list">
+                    {form.visual_uploads.map((f, i) => (
+                      <li key={i} className="upload-chip">
+                        <Paperclip size={12} />
+                        <a href={f.url} target="_blank" rel="noreferrer">{f.name || `file-${i + 1}`}</a>
+                        <button
+                          type="button"
+                          aria-label="Remove"
+                          onClick={() =>
+                            update(
+                              "visual_uploads",
+                              form.visual_uploads.filter((_, j) => j !== i)
+                            )
+                          }
+                        >
+                          <X size={11} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             </section>
 

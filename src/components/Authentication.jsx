@@ -41,6 +41,15 @@ const Authentication = () => {
             setCurrentOnboardingUser(resolvedEmail);
           }
 
+          if (response.data?.user?.profile_photo_url) {
+            localStorage.setItem(
+              "profile_photo_url",
+              response.data.user.profile_photo_url
+            );
+          } else {
+            localStorage.removeItem("profile_photo_url");
+          }
+
           setTimeout(() => {
             const pendingOnboarding = getOnboardingProgress(resolvedEmail);
             if (pendingOnboarding?.step) {

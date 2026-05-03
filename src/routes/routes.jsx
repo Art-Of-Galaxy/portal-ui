@@ -13,6 +13,8 @@ import BrandingDesign from "../pages/projects/BrandingDesign";
 import BrandGuidelinesForm from "../pages/projects/BrandGuidelinesForm";
 import RebrandingForm from "../pages/projects/RebrandingForm";
 import EcommerceMockupsForm from "../pages/projects/EcommerceMockupsForm";
+import LogoDesignForm from "../pages/projects/LogoDesignForm";
+import MyFiles from "../pages/files/MyFiles";
 import ProjectDetail from "../pages/projects/ProjectDetail";
 import Authentication from "../components/Authentication";
 import ForgotPassword from "../pages/login/ForgotPassword";
@@ -50,7 +52,7 @@ const AppRoutes = () => {
           <Route path="/new-projects/branding-design" element={withLayout(BrandingDesign)} />
 
           {/* Branding & Design tool agents (placeholders until each is built) */}
-          <Route path="/new-projects/branding-design/logo" element={withLayout(ComingSoon, { title: "Logo Design", description: "Generate a unique logo with Midjourney, DALL·E, and Gemini. Tool flow coming soon." })} />
+          <Route path="/new-projects/branding-design/logo" element={withLayout(LogoDesignForm)} />
           <Route path="/new-projects/branding-design/brand-guidelines" element={withLayout(BrandGuidelinesForm)} />
           <Route path="/new-projects/branding-design/printing" element={withLayout(ComingSoon, { title: "Printing Design", description: "Print-ready collateral powered by GPT and Claude Sonnet. Tool flow coming soon." })} />
           <Route path="/new-projects/branding-design/rebranding" element={withLayout(RebrandingForm)} />
@@ -69,7 +71,7 @@ const AppRoutes = () => {
           <Route path="/my-projects" element={withLayout(Projects)} />
           <Route path="/my-projects/:id" element={withLayout(ProjectDetail)} />
           <Route path="/my-tasks" element={withLayout(ComingSoon, { title: "My Tasks", description: "Your task inbox will live here — assignments, due dates, and status in one place." })} />
-          <Route path="/my-files" element={withLayout(ComingSoon, { title: "My Files", description: "All files generated or uploaded across your projects will be organized here." })} />
+          <Route path="/my-files" element={withLayout(MyFiles)} />
 
           <Route path="/customers" element={withLayout(ComingSoon, { title: "Customers", description: "Manage your customer database, tags, and segments in one place." })} />
           <Route path="/conversations" element={withLayout(ComingSoon, { title: "Conversations", description: "Centralize chats and client communication across channels." })} />

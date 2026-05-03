@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarCheck, RefreshCw, Upload, X } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Paperclip, RefreshCw, X } from "lucide-react";
 import { fetchWithConfig } from "../../utils/authHelper";
 import { apiServices } from "../../services/apiServices";
 import RebrandingView from "./RebrandingView";
+import FileUploadButton from "../../components/ui/FileUploadButton";
 import { useLoading } from "../../context/LoadingContext";
 
 const REBRANDING_LOADER_MESSAGES = [
@@ -43,6 +44,7 @@ const initialForm = {
   desired_values: "",
   perception_after: "",
   reference_links: ["", "", ""],
+  reference_uploads: [],
   scope: [],
   scope_other: "",
   additional_notes: "",
@@ -270,11 +272,6 @@ export default function RebrandingForm() {
         Back to Branding &amp; Design
       </button>
 
-      <div className="portal-create-header">
-        <h1 className="portal-create-title">Let&apos;s create a project</h1>
-        <p className="portal-create-sub">Choose the service you need</p>
-      </div>
-
       <form className="bg-form-shell" onSubmit={handleSubmit}>
         <div className="bg-form-header">
           <span className="bg-form-header-tile">
@@ -453,20 +450,43 @@ export default function RebrandingForm() {
                   <span style={{ fontSize: 12, color: "var(--portal-text-muted)" }}>
                     Or upload files:
                   </span>
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    style={{ height: 36, minWidth: 0, padding: "0 1.2rem", fontSize: 13 }}
-                    onClick={() =>
-                      setError(
-                        "File upload is coming soon — paste reference links above for now."
-                      )
+                  <FileUploadButton
+                    category="Branding & Design"
+                    serviceType="rebranding"
+                    projectName={form.current_brand_name || "Rebranding Request"}
+                    accept="image/*,application/pdf"
+                    multiple
+                    onUploaded={({ url, name }) =>
+                      update("reference_uploads", [
+                        ...form.reference_uploads,
+                        { url, name },
+                      ])
                     }
-                  >
-                    <Upload size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
-                    Upload
-                  </button>
+                    onError={(msg) => setError(msg)}
+                  />
                 </div>
+                {form.reference_uploads.length ? (
+                  <ul className="upload-chip-list">
+                    {form.reference_uploads.map((f, i) => (
+                      <li key={i} className="upload-chip">
+                        <Paperclip size={12} />
+                        <a href={f.url} target="_blank" rel="noreferrer">{f.name || `file-${i + 1}`}</a>
+                        <button
+                          type="button"
+                          aria-label="Remove"
+                          onClick={() =>
+                            update(
+                              "reference_uploads",
+                              form.reference_uploads.filter((_, j) => j !== i)
+                            )
+                          }
+                        >
+                          <X size={11} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             </section>
 

@@ -62,6 +62,15 @@ export const apiServices = {
         });
         return response;
     },
+    delete_project: async (id) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const response = await fetchWithConfig('notion/delete_project', {
+            method: 'POST',
+            body: { id, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
+    },
     get_profile: async () => {
         const response = await fetchWithConfig('authentication/profile', { method: 'GET' });
         return response;
@@ -126,6 +135,53 @@ export const apiServices = {
             body: { form, model, user_email: userEmail },
             headers: { 'Content-Type': 'application/json' },
         });
+        return response;
+    },
+    generate_logo_design: async ({ form, model, num_images }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const response = await fetchWithConfig('logo-design/generate', {
+            method: 'POST',
+            body: { form, model, num_images, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
+    },
+    upload_file: async (file, { projectId, projectName, category, serviceType } = {}) => {
+        const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
+        const userEmail = localStorage.getItem('user_email') || '';
+        const formData = new FormData();
+        formData.append('file', file);
+        if (projectId) formData.append('project_id', String(projectId));
+        if (projectName) formData.append('project_name', projectName);
+        if (category) formData.append('category', category);
+        if (serviceType) formData.append('service_type', serviceType);
+        if (userEmail) formData.append('user_email', userEmail);
+
+        const response = await fetch(`${API_URL}/files/upload`, {
+            method: 'POST',
+            body: formData,
+            headers: userEmail ? { 'X-User-Email': userEmail } : undefined,
+        });
+        const text = await response.text();
+        let parsed = null;
+        if (text) {
+            try { parsed = JSON.parse(text); } catch { parsed = { raw: text }; }
+        }
+        if (!response.ok) {
+            const msg = (parsed && (parsed.message || parsed.error || parsed.raw)) ||
+                `HTTP error! status: ${response.status}`;
+            throw new Error(msg);
+        }
+        return parsed;
+    },
+    list_files: async () => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        const response = await fetchWithConfig(`files${qs}`, { method: 'GET' });
+        return response;
+    },
+    delete_file: async (id) => {
+        const response = await fetchWithConfig(`files/${id}`, { method: 'DELETE' });
         return response;
     },
 };

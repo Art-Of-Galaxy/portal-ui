@@ -34,6 +34,11 @@ export const loginUser = createAsyncThunk(
         localStorage.setItem("user_name", data.user.name);
       }
       localStorage.setItem("user_email", data?.user?.email || userData.email);
+      if (data?.user?.profile_photo_url) {
+        localStorage.setItem("profile_photo_url", data.user.profile_photo_url);
+      } else {
+        localStorage.removeItem("profile_photo_url");
+      }
 
       return {
         user: data.user || null,
@@ -62,6 +67,7 @@ const authSlice = createSlice({
       state.token = null;
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user_email");
+      localStorage.removeItem("profile_photo_url");
     },
   },
   extraReducers: (builder) => {
