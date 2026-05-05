@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { AlertTriangle, Download, ExternalLink, ImageOff } from "lucide-react";
+import SafeImage from "../../components/ui/SafeImage";
 
 // Map a MIME type or URL to a sensible file extension.
 // Note: "image/svg+xml" must collapse to "svg" — naively splitting on "/"
@@ -29,18 +30,6 @@ function inferExtension(url, contentType) {
     /* ignore */
   }
   return "png";
-}
-
-function isSvg(img) {
-  if (!img) return false;
-  if (typeof img.content_type === "string" && /svg/i.test(img.content_type)) {
-    return true;
-  }
-  if (typeof img.url === "string") {
-    const path = img.url.split("?")[0].split("#")[0];
-    if (/\.svg$/i.test(path)) return true;
-  }
-  return false;
 }
 
 async function downloadFromUrl(url, filename) {
@@ -163,7 +152,6 @@ export default function LogoDesignView({ images, prompt, brandName, model, seed,
       <div className="logo-result-grid">
         {usable.map((img, i) => {
           const broken = brokenIndices.has(i);
-          const svg = isSvg(img);
           return (
             <figure key={img.url || i} className="logo-result-card">
               <div className="logo-result-image">
@@ -172,28 +160,14 @@ export default function LogoDesignView({ images, prompt, brandName, model, seed,
                     <ImageOff size={28} />
                     <span>Image unavailable</span>
                   </div>
-                ) : svg ? (
-                  // <object> respects SVG content even when the URL has no
-                  // extension or the server omits Content-Type. The <img> tag
-                  // is left as a fallback inside <object>.
-                  <object
-                    type="image/svg+xml"
-                    data={img.url}
-                    aria-label={`Logo concept ${i + 1}`}
-                    className="logo-result-svg"
-                  >
-                    <img
-                      src={img.url}
-                      alt={`Logo concept ${i + 1}`}
-                      loading="lazy"
-                      onError={() => markBroken(i)}
-                    />
-                  </object>
                 ) : (
-                  <img
+                  // SafeImage uses <img> (which never auto-downloads, unlike
+                  // <object>) and falls back to inlining the SVG markup if
+                  // the <img> render fails.
+                  <SafeImage
                     src={img.url}
                     alt={`Logo concept ${i + 1}`}
-                    loading="lazy"
+                    className="logo-result-svg"
                     onError={() => markBroken(i)}
                   />
                 )}

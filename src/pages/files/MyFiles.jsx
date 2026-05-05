@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Download, ExternalLink, FileText, Image as ImageIcon, Trash2 } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
+import SafeImage from "../../components/ui/SafeImage";
 
 function formatServiceType(value) {
   if (!value) return "Other";
@@ -20,12 +21,6 @@ function formatDate(value) {
 function isImageMime(mime, url) {
   if (mime && mime.startsWith("image/")) return true;
   if (typeof url === "string" && /\.(png|jpe?g|gif|webp|svg)$/i.test(url.split("?")[0])) return true;
-  return false;
-}
-
-function isSvgMime(mime, url) {
-  if (mime && /svg/i.test(mime)) return true;
-  if (typeof url === "string" && /\.svg$/i.test(url.split("?")[0].split("#")[0])) return true;
   return false;
 }
 
@@ -211,21 +206,11 @@ export default function MyFiles() {
                   {sub.items.map((file) => {
                     const url = resolveUrl(file.url);
                     const isImage = isImageMime(file.mime_type, file.url);
-                    const svg = isSvgMime(file.mime_type, file.url);
                     return (
                       <article key={file.id} className="files-card">
                         <div className="files-card-preview">
-                          {svg ? (
-                            <object
-                              type="image/svg+xml"
-                              data={url}
-                              aria-label={file.file_name || "file"}
-                              className="files-card-svg"
-                            >
-                              <img src={url} alt={file.file_name || "file"} loading="lazy" />
-                            </object>
-                          ) : isImage ? (
-                            <img src={url} alt={file.file_name || "file"} loading="lazy" />
+                          {isImage ? (
+                            <SafeImage src={url} alt={file.file_name || "file"} />
                           ) : (
                             <FileText size={32} />
                           )}
