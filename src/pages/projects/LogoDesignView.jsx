@@ -2,19 +2,45 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { AlertTriangle, Download, ExternalLink, ImageOff } from "lucide-react";
 
+// Map a MIME type or URL to a sensible file extension.
+// Note: "image/svg+xml" must collapse to "svg" — naively splitting on "/"
+// leaves "svg+xml" which is invalid.
 function inferExtension(url, contentType) {
-  if (contentType && contentType.includes("/")) {
-    const ext = contentType.split("/")[1].split(";")[0].trim();
-    if (ext) return ext === "jpeg" ? "jpg" : ext;
+  const ct = String(contentType || "").split(";")[0].trim().toLowerCase();
+  const map = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/svg+xml": "svg",
+    "application/pdf": "pdf",
+  };
+  if (map[ct]) return map[ct];
+  if (ct.includes("/")) {
+    const tail = ct.split("/")[1].split("+")[0].replace(/[^a-z0-9]/g, "");
+    if (tail) return tail === "jpeg" ? "jpg" : tail;
   }
   try {
     const path = new URL(url).pathname;
-    const m = path.match(/\.([a-zA-Z0-9]{3,4})$/);
+    const m = path.match(/\.([a-zA-Z0-9]{2,5})$/);
     if (m) return m[1].toLowerCase();
   } catch {
     /* ignore */
   }
   return "png";
+}
+
+function isSvg(img) {
+  if (!img) return false;
+  if (typeof img.content_type === "string" && /svg/i.test(img.content_type)) {
+    return true;
+  }
+  if (typeof img.url === "string") {
+    const path = img.url.split("?")[0].split("#")[0];
+    if (/\.svg$/i.test(path)) return true;
+  }
+  return false;
 }
 
 async function downloadFromUrl(url, filename) {
@@ -137,6 +163,7 @@ export default function LogoDesignView({ images, prompt, brandName, model, seed,
       <div className="logo-result-grid">
         {usable.map((img, i) => {
           const broken = brokenIndices.has(i);
+          const svg = isSvg(img);
           return (
             <figure key={img.url || i} className="logo-result-card">
               <div className="logo-result-image">
@@ -145,6 +172,23 @@ export default function LogoDesignView({ images, prompt, brandName, model, seed,
                     <ImageOff size={28} />
                     <span>Image unavailable</span>
                   </div>
+                ) : svg ? (
+                  // <object> respects SVG content even when the URL has no
+                  // extension or the server omits Content-Type. The <img> tag
+                  // is left as a fallback inside <object>.
+                  <object
+                    type="image/svg+xml"
+                    data={img.url}
+                    aria-label={`Logo concept ${i + 1}`}
+                    className="logo-result-svg"
+                  >
+                    <img
+                      src={img.url}
+                      alt={`Logo concept ${i + 1}`}
+                      loading="lazy"
+                      onError={() => markBroken(i)}
+                    />
+                  </object>
                 ) : (
                   <img
                     src={img.url}

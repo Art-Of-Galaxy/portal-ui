@@ -691,7 +691,7 @@ export default function LogoDesignForm() {
                   value={numImages}
                   onChange={(e) => setNumImages(Number(e.target.value))}
                 >
-                  {[4].map((n) => (
+                  {[1, 2, 3, 4].map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
