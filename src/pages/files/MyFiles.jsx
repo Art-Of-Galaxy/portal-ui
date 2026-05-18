@@ -37,18 +37,25 @@ function resolveUrl(url) {
   }
 }
 
-async function downloadFile(url, filename) {
-  const response = await fetch(url, { mode: "cors" });
-  if (!response.ok) throw new Error(`Fetch failed (${response.status})`);
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
+function triggerDownload(url, filename) {
   const link = document.createElement("a");
-  link.href = objectUrl;
+  link.href = url;
   link.download = filename;
+  link.rel = "noopener";
   document.body.appendChild(link);
   link.click();
   link.remove();
-  setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+}
+
+async function downloadFile(url, filename) {
+  // Get a short-lived signed URL with attachment disposition baked in,
+  // then navigate to it. No client-side blob fetch → no CORS preflight.
+  try {
+    const res = await apiServices.presigned_download({ url, filename });
+    triggerDownload(res?.presigned_url || url, filename);
+  } catch {
+    window.open(url, "_blank", "noopener");
+  }
 }
 
 export default function MyFiles() {
@@ -120,7 +127,7 @@ export default function MyFiles() {
     try {
       await downloadFile(resolveUrl(file.url), file.file_name || `file-${file.id}`);
     } catch (err) {
-      setError(err?.message || "Download failed. Try opening the file and saving manually.");
+      setError(err?.message || "Download failed. Right-click → Save image as… also works.");
     }
   };
 

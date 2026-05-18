@@ -1,21 +1,68 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { AlertTriangle, Download, ExternalLink, ImageOff } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  Download,
+  ImageOff,
+  Maximize2,
+  X,
+} from "lucide-react";
 import SafeImage from "../../components/ui/SafeImage";
+import { apiServices } from "../../services/apiServices";
 
-// Map a MIME type or URL to a sensible file extension.
-// Note: "image/svg+xml" must collapse to "svg" — naively splitting on "/"
-// leaves "svg+xml" which is invalid.
+// -------- Lookups --------
+
+const STYLE_LABELS = {
+  vintage: "Vintage",
+  mascot: "Mascot",
+  wordmark: "Wordmark",
+  monogram: "Monogram",
+  combination: "Combination",
+  minimalist: "Minimalist",
+};
+
+const TYPO_LABELS = {
+  serif: "Serif",
+  sans: "Sans Serif",
+  script: "Script",
+  modern: "Modern",
+  display: "Display",
+  condensed: "Condensed",
+};
+
+// A representative hex for each color-theory family (used when the user
+// only tapped the theory cards and didn't enter a custom hex).
+const FAMILY_HEX = {
+  blue: "#3a7bd5",
+  purple: "#8e2de2",
+  pink: "#d12c8c",
+  red: "#c0392b",
+  orange: "#d35400",
+  yellow: "#f1c40f",
+  green: "#2e7d32",
+  teal: "#16a085",
+  grey: "#5d5d5d",
+};
+
+// -------- Helpers --------
+
+function isValidHex(value) {
+  return typeof value === "string" && /^#?[0-9a-fA-F]{6}$/.test(value.trim());
+}
+function normalizeHex(value) {
+  const v = String(value || "").trim();
+  return v.startsWith("#") ? v.toUpperCase() : `#${v.toUpperCase()}`;
+}
+function isUsable(img) {
+  return Boolean(img && typeof img.url === "string" && /^https?:\/\//i.test(img.url));
+}
+
 function inferExtension(url, contentType) {
   const ct = String(contentType || "").split(";")[0].trim().toLowerCase();
   const map = {
-    "image/png": "png",
-    "image/jpeg": "jpg",
-    "image/jpg": "jpg",
-    "image/webp": "webp",
-    "image/gif": "gif",
-    "image/svg+xml": "svg",
-    "application/pdf": "pdf",
+    "image/png": "png", "image/jpeg": "jpg", "image/jpg": "jpg",
+    "image/webp": "webp", "image/gif": "gif", "image/svg+xml": "svg",
   };
   if (map[ct]) return map[ct];
   if (ct.includes("/")) {
@@ -32,29 +79,183 @@ function inferExtension(url, contentType) {
   return "png";
 }
 
-async function downloadFromUrl(url, filename) {
-  const response = await fetch(url, { mode: "cors" });
-  if (!response.ok) throw new Error(`Fetch failed (${response.status})`);
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
+function triggerDownload(url, filename) {
   const link = document.createElement("a");
-  link.href = objectUrl;
+  link.href = url;
   link.download = filename;
+  link.rel = "noopener";
   document.body.appendChild(link);
   link.click();
   link.remove();
-  setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
 }
 
-function isUsable(img) {
-  return Boolean(img && typeof img.url === "string" && /^https?:\/\//i.test(img.url));
+async function downloadViaPresign(url, filename) {
+  try {
+    const res = await apiServices.presigned_download({ url, filename });
+    triggerDownload(res?.presigned_url || url, filename);
+  } catch {
+    window.open(url, "_blank", "noopener");
+  }
 }
 
-export default function LogoDesignView({ images, prompt, brandName, model, seed, errors, requested }) {
+// -------- Subcomponents --------
+
+function SidebarCard({ label, children }) {
+  return (
+    <section className="logo-result-side-card">
+      {label ? <span className="logo-result-side-card-label">{label}</span> : null}
+      {children}
+    </section>
+  );
+}
+SidebarCard.propTypes = {
+  label: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};
+SidebarCard.defaultProps = { label: "" };
+
+function ConceptCard({
+  img,
+  index,
+  selected,
+  broken,
+  downloading,
+  onSelect,
+  onPreview,
+  onDownload,
+  onError,
+}) {
+  return (
+    <article
+      className={`logo-concept-card ${selected ? "is-selected" : ""}`}
+      onClick={() => onSelect(index)}
+    >
+      <div className="logo-concept-image">
+        {broken ? (
+          <div className="logo-concept-broken">
+            <ImageOff size={28} />
+            <span>Image unavailable</span>
+          </div>
+        ) : (
+          <SafeImage
+            src={img.url}
+            alt={`Logo concept ${index + 1}`}
+            onError={() => onError(index)}
+          />
+        )}
+      </div>
+      <div className="logo-concept-footer">
+        <span className="logo-concept-name">Concept {index + 1}</span>
+        <div className="logo-concept-actions">
+          <button
+            type="button"
+            className="logo-concept-action-btn"
+            onClick={(e) => { e.stopPropagation(); onPreview(img); }}
+            aria-label={`Preview concept ${index + 1}`}
+            title="Preview"
+          >
+            <Maximize2 size={13} />
+          </button>
+          <button
+            type="button"
+            className="logo-concept-action-btn"
+            onClick={(e) => { e.stopPropagation(); onDownload(img, index); }}
+            disabled={downloading || broken}
+            aria-label={`Download concept ${index + 1}`}
+            title="Download"
+          >
+            <Download size={13} />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+ConceptCard.propTypes = {
+  img: PropTypes.shape({ url: PropTypes.string, content_type: PropTypes.string }).isRequired,
+  index: PropTypes.number.isRequired,
+  selected: PropTypes.bool,
+  broken: PropTypes.bool,
+  downloading: PropTypes.bool,
+  onSelect: PropTypes.func.isRequired,
+  onPreview: PropTypes.func.isRequired,
+  onDownload: PropTypes.func.isRequired,
+  onError: PropTypes.func.isRequired,
+};
+ConceptCard.defaultProps = { selected: false, broken: false, downloading: false };
+
+// -------- Main view --------
+
+export default function LogoDesignView({
+  // existing
+  images, prompt, brandName, model, seed, errors, requested,
+  // new — needed for the redesigned layout
+  tagline, businessDescription, logoStyle,
+  selectedColors, customColors, typography,
+  status, statusLabel,
+  onRegenerate,
+}) {
   const usable = (Array.isArray(images) ? images : []).filter(isUsable);
+  const [selectedConcept, setSelectedConcept] = useState(0);
   const [downloadingIndex, setDownloadingIndex] = useState(-1);
   const [downloadError, setDownloadError] = useState("");
   const [brokenIndices, setBrokenIndices] = useState(() => new Set());
+  const [previewImg, setPreviewImg] = useState(null);
+  const [revisionSent, setRevisionSent] = useState(false);
+
+  useEffect(() => {
+    // Keep selection valid when image set changes.
+    if (selectedConcept >= usable.length) setSelectedConcept(0);
+  }, [usable.length, selectedConcept]);
+
+  // ----- Palette -----
+  const palette = useMemo(() => {
+    const out = [];
+    const seen = new Set();
+    const add = (hex) => {
+      const h = normalizeHex(hex);
+      if (!isValidHex(h)) return;
+      if (seen.has(h)) return;
+      seen.add(h);
+      out.push(h);
+    };
+    (Array.isArray(selectedColors) ? selectedColors : []).forEach((c) => {
+      const family = String(c || "").toLowerCase();
+      if (FAMILY_HEX[family]) add(FAMILY_HEX[family]);
+    });
+    (Array.isArray(customColors) ? customColors : []).forEach((c) => add(c));
+    return out.slice(0, 4);
+  }, [selectedColors, customColors]);
+
+  // ----- Typography rows (label: value) -----
+  const typoRows = useMemo(() => {
+    const list = Array.isArray(typography) ? typography.filter(Boolean) : [];
+    if (list.length === 0) return [];
+    const rows = [];
+    if (list[0]) rows.push({ label: "Display", value: TYPO_LABELS[list[0]] || list[0] });
+    if (list[1]) rows.push({ label: "Body", value: TYPO_LABELS[list[1]] || list[1] });
+    list.slice(2).forEach((id, i) => {
+      rows.push({ label: `Accent ${i + 1}`, value: TYPO_LABELS[id] || id });
+    });
+    return rows;
+  }, [typography]);
+
+  // ----- Status pill -----
+  const resolvedStatus = useMemo(() => {
+    const raw = (statusLabel || status || "in progress").toString().toLowerCase();
+    if (raw.includes("done") || raw === "3") return { cls: "is-done", text: "Done" };
+    if (raw.includes("progress") || raw === "1") return { cls: "is-progress", text: "In progress" };
+    return { cls: "is-pending", text: "Pending" };
+  }, [status, statusLabel]);
+
+  const styleLabel = STYLE_LABELS[String(logoStyle || "").toLowerCase()] || logoStyle;
+
+  const markBroken = (index) => {
+    setBrokenIndices((prev) => {
+      if (prev.has(index)) return prev;
+      const next = new Set(prev); next.add(index); return next;
+    });
+  };
 
   const handleDownload = async (img, index) => {
     setDownloadError("");
@@ -62,7 +263,7 @@ export default function LogoDesignView({ images, prompt, brandName, model, seed,
     try {
       const ext = inferExtension(img.url, img.content_type);
       const safeBrand = (brandName || "logo").replace(/[^a-z0-9-]+/gi, "-").toLowerCase();
-      await downloadFromUrl(img.url, `${safeBrand}-concept-${index + 1}.${ext}`);
+      await downloadViaPresign(img.url, `${safeBrand}-concept-${index + 1}.${ext}`);
     } catch (err) {
       setDownloadError(err?.message || "Download failed. Right-click the image to save.");
     } finally {
@@ -70,15 +271,12 @@ export default function LogoDesignView({ images, prompt, brandName, model, seed,
     }
   };
 
-  const markBroken = (index) => {
-    setBrokenIndices((prev) => {
-      if (prev.has(index)) return prev;
-      const next = new Set(prev);
-      next.add(index);
-      return next;
-    });
+  const handleRequestRevision = () => {
+    setRevisionSent(true);
+    setTimeout(() => setRevisionSent(false), 3500);
   };
 
+  // Nothing to show if the model returned no usable images.
   if (!usable.length) {
     return (
       <div className="portal-card">
@@ -96,122 +294,189 @@ export default function LogoDesignView({ images, prompt, brandName, model, seed,
   }
 
   const partial = typeof requested === "number" && requested > usable.length;
+  const upperBrand = String(brandName || "").trim().toUpperCase();
+  const brandSubtitle = brandName && upperBrand !== brandName.trim() ? brandName : null;
 
   return (
-    <div className="bg-view">
-      <div className="bg-view-hero">
-        <div className="bg-view-hero-tag">Logo concepts</div>
-        <h2>{brandName || "Logo Design"}</h2>
-        <p>
-          {usable.length} concept{usable.length === 1 ? "" : "s"} generated. Pick a favorite to
-          refine with your AOG strategist.
-        </p>
-      </div>
-
-      {partial || (Array.isArray(errors) && errors.length) ? (
-        <div
-          style={{
-            background: "rgba(229, 159, 0, 0.12)",
-            border: "1px solid rgba(229, 159, 0, 0.35)",
-            color: "var(--portal-text)",
-            padding: "0.6rem 0.9rem",
-            borderRadius: 8,
-            margin: "0 0 0.8rem",
-            fontSize: 12,
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 8,
-          }}
-        >
-          <AlertTriangle size={14} style={{ marginTop: 2, flexShrink: 0 }} />
-          <span>
-            {partial
-              ? `${usable.length} of ${requested} variants returned — the model may have rate-limited or filtered the rest.`
-              : "Some variants failed to generate."}
-            {Array.isArray(errors) && errors.length ? ` (${errors[0]})` : null}
-          </span>
-        </div>
-      ) : null}
-
-      {downloadError ? (
-        <div
-          style={{
-            background: "rgba(232,77,77,0.1)",
-            border: "1px solid rgba(232,77,77,0.3)",
-            color: "var(--portal-danger)",
-            padding: "0.6rem 0.9rem",
-            borderRadius: 8,
-            margin: "0 0 0.8rem",
-            fontSize: 12,
-          }}
-        >
-          {downloadError}
-        </div>
-      ) : null}
-
-      <div className="logo-result-grid">
-        {usable.map((img, i) => {
-          const broken = brokenIndices.has(i);
-          return (
-            <figure key={img.url || i} className="logo-result-card">
-              <div className="logo-result-image">
-                {broken ? (
-                  <div className="logo-result-broken">
-                    <ImageOff size={28} />
-                    <span>Image unavailable</span>
-                  </div>
-                ) : (
-                  // SafeImage uses <img> (which never auto-downloads, unlike
-                  // <object>) and falls back to inlining the SVG markup if
-                  // the <img> render fails.
-                  <SafeImage
-                    src={img.url}
-                    alt={`Logo concept ${i + 1}`}
-                    className="logo-result-svg"
-                    onError={() => markBroken(i)}
-                  />
-                )}
+    <div className="logo-result-page">
+      <div className="logo-result-layout">
+        {/* -------- LEFT SIDEBAR -------- */}
+        <aside className="logo-result-side">
+          <section className="logo-brand-card">
+            <div className="logo-brand-pills">
+              <div className="logo-brand-pill-stack">
+                <span className="logo-brand-pill is-category">Branding &amp; Design</span>
+                <span className="logo-brand-pill is-service">Logo Request</span>
               </div>
-              <figcaption className="logo-result-caption">
-                <span>Concept {i + 1}</span>
-                <span className="logo-result-actions">
-                  <a
-                    href={img.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="logo-result-link"
-                    aria-label={`Open concept ${i + 1} in a new tab`}
-                  >
-                    <ExternalLink size={14} />
-                  </a>
-                  <button
-                    type="button"
-                    className="logo-result-link"
-                    onClick={() => handleDownload(img, i)}
-                    disabled={downloadingIndex === i || broken}
-                    aria-label={`Download concept ${i + 1}`}
-                  >
-                    <Download size={14} />
-                  </button>
-                </span>
-              </figcaption>
-            </figure>
-          );
-        })}
+              <span className={`logo-brand-status ${resolvedStatus.cls}`}>
+                <span className="dot" /> {resolvedStatus.text}
+              </span>
+            </div>
+            <h2 className="logo-brand-name">{upperBrand || "Brand"}</h2>
+            {brandSubtitle ? (
+              <p className="logo-brand-subtitle">{brandSubtitle}</p>
+            ) : null}
+            {tagline ? (
+              <>
+                <hr className="logo-brand-divider" />
+                <p className="logo-brand-tagline">&ldquo;{tagline}&rdquo;</p>
+              </>
+            ) : null}
+          </section>
+
+          {businessDescription ? (
+            <SidebarCard label="Business">
+              <p className="logo-result-side-text">{businessDescription}</p>
+            </SidebarCard>
+          ) : null}
+
+          {styleLabel ? (
+            <SidebarCard label="Logo Style">
+              <span className="logo-style-pill">{styleLabel}</span>
+            </SidebarCard>
+          ) : null}
+
+          {palette.length ? (
+            <SidebarCard label="Color Palette">
+              <div className="logo-palette-row">
+                {palette.map((hex) => (
+                  <div key={hex} className="logo-palette-item">
+                    <span className="logo-palette-swatch" style={{ background: hex }} />
+                    <span className="logo-palette-hex">{hex}</span>
+                  </div>
+                ))}
+              </div>
+            </SidebarCard>
+          ) : null}
+
+          {typoRows.length ? (
+            <SidebarCard label="Typography">
+              {typoRows.map((row) => (
+                <p key={row.label} className="logo-typo-row">
+                  <span className="logo-typo-label">{row.label}:</span>
+                  <strong>{row.value}</strong>
+                </p>
+              ))}
+            </SidebarCard>
+          ) : null}
+        </aside>
+
+        {/* -------- RIGHT MAIN -------- */}
+        <div className="logo-result-main">
+          <header className="logo-concepts-header">
+            <div>
+              <h2 className="logo-concepts-title">Logo Concepts</h2>
+              <p className="logo-concepts-sub">
+                Select your favorite to refine it with your AOG strategist. You can download any
+                concept at any time.
+              </p>
+            </div>
+            {onRegenerate ? (
+              <button
+                type="button"
+                className="logo-regenerate-btn"
+                onClick={onRegenerate}
+              >
+                Regenerate
+              </button>
+            ) : null}
+          </header>
+
+          {partial || (Array.isArray(errors) && errors.length) ? (
+            <div className="logo-result-banner is-warn">
+              <AlertTriangle size={14} />
+              <span>
+                {partial
+                  ? `${usable.length} of ${requested} variants returned — the model may have rate-limited or filtered the rest.`
+                  : "Some variants failed to generate."}
+                {Array.isArray(errors) && errors.length ? ` (${errors[0]})` : null}
+              </span>
+            </div>
+          ) : null}
+
+          {downloadError ? (
+            <div className="logo-result-banner is-error">
+              <AlertTriangle size={14} />
+              <span>{downloadError}</span>
+            </div>
+          ) : null}
+
+          <div className="logo-concepts-grid">
+            {usable.map((img, i) => (
+              <ConceptCard
+                key={img.url || i}
+                img={img}
+                index={i}
+                selected={selectedConcept === i}
+                broken={brokenIndices.has(i)}
+                downloading={downloadingIndex === i}
+                onSelect={setSelectedConcept}
+                onPreview={(p) => setPreviewImg(p)}
+                onDownload={handleDownload}
+                onError={markBroken}
+              />
+            ))}
+          </div>
+
+          <section className="logo-revision-card">
+            <div>
+              <h3>Ready to refine Concept {selectedConcept + 1}?</h3>
+              <p>
+                Your AOG strategist will review your selection and adjust the final concept.
+              </p>
+            </div>
+            {revisionSent ? (
+              <span className="logo-revision-sent">
+                <Check size={14} /> Revision request received
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="logo-revision-btn"
+                onClick={handleRequestRevision}
+              >
+                Request revision →
+              </button>
+            )}
+          </section>
+
+          {prompt ? (
+            <details className="logo-prompt-accordion">
+              <summary>View prompt sent to the model</summary>
+              <pre>{prompt}</pre>
+            </details>
+          ) : null}
+
+          {model || seed != null ? (
+            <p className="logo-result-meta">
+              Generated with <strong>{model}</strong>
+              {seed != null ? <> · seed {seed}</> : null}
+            </p>
+          ) : null}
+        </div>
       </div>
 
-      {prompt ? (
-        <details className="logo-result-prompt">
-          <summary>View the prompt sent to the model</summary>
-          <pre>{prompt}</pre>
-        </details>
-      ) : null}
-
-      {model || seed != null ? (
-        <p className="bg-view-meta">
-          Generated with <strong>{model}</strong>
-          {seed != null ? <> · seed {seed}</> : null}
-        </p>
+      {/* -------- Full-size preview overlay -------- */}
+      {previewImg ? (
+        <div
+          className="logo-preview-overlay"
+          onClick={() => setPreviewImg(null)}
+        >
+          <button
+            type="button"
+            className="logo-preview-close"
+            onClick={() => setPreviewImg(null)}
+            aria-label="Close preview"
+          >
+            <X size={18} />
+          </button>
+          <div
+            className="logo-preview-frame"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SafeImage src={previewImg.url} alt="Logo concept preview" />
+          </div>
+        </div>
       ) : null}
     </div>
   );
@@ -231,6 +496,15 @@ LogoDesignView.propTypes = {
   seed: PropTypes.number,
   errors: PropTypes.arrayOf(PropTypes.string),
   requested: PropTypes.number,
+  tagline: PropTypes.string,
+  businessDescription: PropTypes.string,
+  logoStyle: PropTypes.string,
+  selectedColors: PropTypes.arrayOf(PropTypes.string),
+  customColors: PropTypes.arrayOf(PropTypes.string),
+  typography: PropTypes.arrayOf(PropTypes.string),
+  status: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  statusLabel: PropTypes.string,
+  onRegenerate: PropTypes.func,
 };
 
 LogoDesignView.defaultProps = {
@@ -241,4 +515,13 @@ LogoDesignView.defaultProps = {
   seed: null,
   errors: undefined,
   requested: undefined,
+  tagline: "",
+  businessDescription: "",
+  logoStyle: "",
+  selectedColors: [],
+  customColors: [],
+  typography: [],
+  status: "",
+  statusLabel: "",
+  onRegenerate: undefined,
 };

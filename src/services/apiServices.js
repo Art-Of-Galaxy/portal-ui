@@ -147,6 +147,50 @@ export const apiServices = {
         return response;
     },
     upload_file: async (file, { projectId, projectName, category, serviceType } = {}) => {
+        // Try the presigned-upload flow first: ask the backend for a short-lived
+        // S3 PUT URL, upload the bytes directly to S3, then confirm. This
+        // bypasses Vercel's ~4.5 MB serverless body limit which is what makes
+        // PSD / hi-res photo uploads fail with "Failed to fetch".
+        try {
+            const presign = await fetchWithConfig('files/presigned-upload', {
+                method: 'POST',
+                body: { filename: file.name, content_type: file.type || '' },
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (presign?.success && presign?.upload_url) {
+                const putRes = await fetch(presign.upload_url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': presign.content_type || file.type || 'application/octet-stream' },
+                    body: file,
+                });
+                if (!putRes.ok) {
+                    throw new Error(`S3 upload failed (HTTP ${putRes.status})`);
+                }
+                const confirmed = await fetchWithConfig('files/confirm-upload', {
+                    method: 'POST',
+                    body: {
+                        public_url: presign.public_url,
+                        file_name: file.name,
+                        size_bytes: file.size,
+                        mime_type: presign.content_type,
+                        project_id: projectId || undefined,
+                        project_name: projectName,
+                        category,
+                        service_type: serviceType,
+                    },
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                return confirmed;
+            }
+        } catch (err) {
+            // 503 means S3 isn't configured (local dev). Fall through to the
+            // multipart endpoint. Any other error: surface it.
+            if (err?.status && err.status !== 503) {
+                throw err;
+            }
+        }
+
+        // Multipart fallback (works locally without S3).
         const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
         const userEmail = localStorage.getItem('user_email') || '';
         const formData = new FormData();
@@ -173,6 +217,14 @@ export const apiServices = {
             throw new Error(msg);
         }
         return parsed;
+    },
+    presigned_download: async ({ url, filename }) => {
+        const response = await fetchWithConfig('files/presigned-download', {
+            method: 'POST',
+            body: { url, filename },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
     },
     list_files: async () => {
         const userEmail = localStorage.getItem('user_email') || undefined;

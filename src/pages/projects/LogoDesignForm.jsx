@@ -8,31 +8,31 @@ import ColorPicker from "../../components/ui/ColorPicker";
 import FileUploadButton from "../../components/ui/FileUploadButton";
 import { useLoading } from "../../context/LoadingContext";
 
-import ref01 from "../../assets/branding/logo/3_1_Ref@2x.png";
-import ref02 from "../../assets/branding/logo/3_2_Ref@2x.png";
-import ref03 from "../../assets/branding/logo/3_3_Ref@2x.png";
-import ref04 from "../../assets/branding/logo/3_4_Ref@2x.png";
-import ref05 from "../../assets/branding/logo/3_5_Ref@2x.png";
-import ref06 from "../../assets/branding/logo/3_6_Ref@2x.png";
-import ref07 from "../../assets/branding/logo/3_7_Ref@2x.png";
-import ref08 from "../../assets/branding/logo/3_8_Ref@2x.png";
-import ref09 from "../../assets/branding/logo/3_9_Ref@2x.png";
-import ref10 from "../../assets/branding/logo/3_10_Ref@2x.png";
-import ref11 from "../../assets/branding/logo/3_11_Ref@2x.png";
-import ref12 from "../../assets/branding/logo/3_12_Ref@2x.png";
-import ref13 from "../../assets/branding/logo/3_13_Ref@2x.png";
-import ref14 from "../../assets/branding/logo/3_14_Ref@2x.png";
-import ref15 from "../../assets/branding/logo/3_15_Ref@2x.png";
-import ref16 from "../../assets/branding/logo/3_16_Ref@2x.png";
-import ref17 from "../../assets/branding/logo/3_17_Ref@2x.png";
-import ref18 from "../../assets/branding/logo/3_18_Ref@2x.png";
-import ref19 from "../../assets/branding/logo/3_19_Ref@2x.png";
-import ref20 from "../../assets/branding/logo/3_20_Ref@2x.png";
-import ref21 from "../../assets/branding/logo/3_21_Ref@2x.png";
-import ref22 from "../../assets/branding/logo/3_22_Ref@2x.png";
-import ref23 from "../../assets/branding/logo/3_23_Ref@2x.png";
-import ref24 from "../../assets/branding/logo/3_24_Ref@2x.png";
-import ref25 from "../../assets/branding/logo/3_25_Ref@2x.png";
+// Reference images per style folder. Each folder contains ~10 hand-picked
+// examples that show the model what we mean by that style. We display the
+// first 5 in the form for visual education and pass up to 3 as image_urls
+// to models that support image-conditioned generation (nano-banana,
+// gpt-image-1, recraft-v3).
+function collectStyleRefs(modules) {
+  // import.meta.glob returns { path: url }. Sort by path so 1, 2, 3 stay
+  // in numeric order rather than alphabetical (1, 10, 2, 3...).
+  return Object.entries(modules)
+    .sort(([a], [b]) => {
+      const an = parseInt(a.match(/(\d+)/)?.[1] || "0", 10);
+      const bn = parseInt(b.match(/(\d+)/)?.[1] || "0", 10);
+      return an - bn;
+    })
+    .map(([, url]) => url);
+}
+
+const STYLE_REFS = {
+  vintage:     collectStyleRefs(import.meta.glob("../../assets/branding/logo/Vintage/*",     { eager: true, query: "?url", import: "default" })),
+  mascot:      collectStyleRefs(import.meta.glob("../../assets/branding/logo/Mascot/*",      { eager: true, query: "?url", import: "default" })),
+  wordmark:    collectStyleRefs(import.meta.glob("../../assets/branding/logo/Woordmark/*",   { eager: true, query: "?url", import: "default" })),
+  monogram:    collectStyleRefs(import.meta.glob("../../assets/branding/logo/Monogram/*",    { eager: true, query: "?url", import: "default" })),
+  combination: collectStyleRefs(import.meta.glob("../../assets/branding/logo/Combination/*", { eager: true, query: "?url", import: "default" })),
+  minimalist:  collectStyleRefs(import.meta.glob("../../assets/branding/logo/Minimalist/*",  { eager: true, query: "?url", import: "default" })),
+};
 
 const LOGO_LOADER_MESSAGES = [
   "Reading your brand brief…",
@@ -46,12 +46,12 @@ const LOGO_LOADER_MESSAGES = [
 ];
 
 const LOGO_STYLES = [
-  { id: "vintage",     label: "Vintage",     refs: [ref01, ref02, ref03, ref04, ref05] },
-  { id: "mascot",      label: "Mascot",      refs: [] },
-  { id: "wordmark",    label: "Wordmark",    refs: [ref06, ref07, ref08, ref09, ref10] },
-  { id: "monogram",    label: "Monogram",    refs: [ref11, ref12, ref13, ref14, ref15] },
-  { id: "combination", label: "Combination", refs: [ref16, ref17, ref18, ref19, ref20] },
-  { id: "minimalist",  label: "Minimalist",  refs: [ref21, ref22, ref23, ref24, ref25] },
+  { id: "vintage",     label: "Vintage",     refs: STYLE_REFS.vintage },
+  { id: "mascot",      label: "Mascot",      refs: STYLE_REFS.mascot },
+  { id: "wordmark",    label: "Wordmark",    refs: STYLE_REFS.wordmark },
+  { id: "monogram",    label: "Monogram",    refs: STYLE_REFS.monogram },
+  { id: "combination", label: "Combination", refs: STYLE_REFS.combination },
+  { id: "minimalist",  label: "Minimalist",  refs: STYLE_REFS.minimalist },
 ];
 
 const COLOR_THEORY = [
@@ -75,11 +75,18 @@ const TYPOGRAPHY_OPTIONS = [
   { id: "condensed", name: "Condensed",  style: { fontFamily: "'Arial Narrow', Impact, sans-serif" } },
 ];
 
+// Models exposed to the operator. Reference-aware models (which can see
+// the example images of the chosen style) are marked accordingly — when
+// one of these is selected we also send the style's reference image URLs.
 const MODEL_OPTIONS = [
-  // { id: "fal-ai/recraft-v3",     label: "Recraft v3 (default — strong with text & vector logos)" },
-  // { id: "fal-ai/ideogram/v2",    label: "Ideogram v2 (good with on-image text)" },
-  // { id: "fal-ai/flux/dev",       label: "Flux dev (general purpose, fast)" },
-  { id: "fal-ai/flux-pro/v1.1",  label: "Flux Pro 1.1 (highest quality)" },
+  { id: "fal-ai/nano-banana",      label: "Nano Banana (Gemini 2.5 — best reference matching)", supportsRefs: true },
+  // { id: "fal-ai/gpt-image-1",      label: "GPT Image 1 (OpenAI — premium quality + references)", supportsRefs: true },
+  { id: "fal-ai/recraft-v3",       label: "Recraft v3 (vector-style logos, references supported)", supportsRefs: true },
+  // { id: "fal-ai/ideogram/v3",      label: "Ideogram v3 (great on-image text)", supportsRefs: false },
+  { id: "fal-ai/flux-pro/v1.1",    label: "Flux Pro 1.1 (text-only, high quality)", supportsRefs: false },
+  { id: "fal-ai/flux-pro/v1.1-ultra", label: "Flux Pro 1.1 Ultra (text-only, ultra-detail)", supportsRefs: false },
+  { id: "fal-ai/nano-banana-2", label: "Nano Banana 2(Gemini 2.5 — best reference matching)", supportsRefs: false },
+  { id: "fal-ai/nano-banana-pro", label: "Nano Banana pro(Gemini 2.5 — best reference matching)", supportsRefs: false },
 ];
 
 const initialForm = {
@@ -156,8 +163,23 @@ export default function LogoDesignForm() {
     [form]
   );
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  // Resolve a Vite asset path ("/assets/abc-123.jpg") into a fully
+  // qualified URL that fal.ai's backend can fetch. On localhost this URL
+  // won't be reachable from fal — the model will fall back to text-only
+  // generation, which is fine for dev. In production the frontend URL is
+  // public so style conditioning works.
+  const toAbsoluteUrl = (path) => {
+    if (!path) return null;
+    try {
+      return new URL(path, window.location.origin).href;
+    } catch {
+      return null;
+    }
+  };
+
+  // Core generation, callable from both the initial submit and the
+  // "Regenerate" button on the result view.
+  const runGenerate = async () => {
     if (!ready || submitting) return;
     setSubmitting(true);
     setError("");
@@ -166,9 +188,19 @@ export default function LogoDesignForm() {
         .map(normalizeHex)
         .filter(isValidHex);
 
+      // Build the style reference URLs (first 3) for the chosen style.
+      // The backend will only forward these to models that support
+      // image conditioning (nano-banana, gpt-image-1, recraft-v3).
+      const styleEntry = LOGO_STYLES.find((s) => s.id === form.logo_style);
+      const styleRefUrls = (styleEntry?.refs || [])
+        .slice(0, 3)
+        .map(toAbsoluteUrl)
+        .filter(Boolean);
+
       const payloadForm = {
         ...form,
         custom_colors: cleanedCustomColors,
+        style_reference_urls: styleRefUrls,
       };
 
       const res = await withLoading(
@@ -185,6 +217,11 @@ export default function LogoDesignForm() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    runGenerate();
   };
 
   const sidebar = (
@@ -266,67 +303,23 @@ export default function LogoDesignForm() {
           Back to Branding &amp; Design
         </button>
 
-        <div className="bg-form-shell">
-          <div className="bg-form-header">
-            <span className="bg-form-header-tile">
-              <PenTool size={20} />
-            </span>
-            <div>
-              <h2>Branding and Design</h2>
-              <p>Craft Identity. Inspire Loyalty. Drive Growth: Build a Brand That Stands Out.</p>
-            </div>
-          </div>
-
-          <div style={{ padding: "1.4rem 1.6rem" }}>
-            <div className="bg-thanks-card" style={{ padding: "1rem 0 1.6rem" }}>
-              <h2>Thank you — your logo concepts are ready</h2>
-              <p>
-                We&apos;ve saved your request to <strong>My Projects</strong> under{" "}
-                <strong>Branding &amp; Design</strong>. Below are the AI-generated logo
-                concepts your AOG strategist will refine with you.
-              </p>
-              <div className="bg-thanks-actions">
-                {result.project_id ? (
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    onClick={() => navigate(`/my-projects/${result.project_id}`)}
-                  >
-                    Open in My Projects
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    onClick={() => navigate("/my-projects")}
-                  >
-                    View My Projects
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="branding-btn-secondary"
-                  onClick={() => {
-                    setResult(null);
-                    setForm(initialForm);
-                  }}
-                >
-                  Request Another Design
-                </button>
-              </div>
-            </div>
-
-            <LogoDesignView
-              images={result.images}
-              prompt={result.prompt}
-              brandName={form.brand_name}
-              model={result.model}
-              seed={result.seed}
-              errors={result.errors}
-              requested={numImages}
-            />
-          </div>
-        </div>
+        <LogoDesignView
+          images={result.images}
+          prompt={result.prompt}
+          brandName={form.brand_name}
+          model={result.model}
+          seed={result.seed}
+          errors={result.errors}
+          requested={numImages}
+          tagline={form.tagline}
+          businessDescription={form.business_description}
+          logoStyle={form.logo_style}
+          selectedColors={form.selected_colors}
+          customColors={form.custom_colors}
+          typography={form.selected_typography}
+          statusLabel="In progress"
+          onRegenerate={runGenerate}
+        />
       </div>
     );
   }
@@ -458,7 +451,7 @@ export default function LogoDesignForm() {
                             ? Array.from({ length: 5 }).map((_, i) => (
                                 <span key={i} className="logo-style-thumb is-placeholder" />
                               ))
-                            : style.refs.map((src, i) => (
+                            : style.refs.slice(0, 5).map((src, i) => (
                                 <span key={i} className="logo-style-thumb">
                                   <img src={src} alt={`${style.label} reference ${i + 1}`} />
                                 </span>
@@ -489,25 +482,28 @@ export default function LogoDesignForm() {
                 />
 
                 <p style={{ margin: "0.6rem 0 0.4rem", fontSize: 12, color: "var(--portal-text-muted)" }}>
-                  A bit of general color theory in case you need it.
+                  Tap a color family below to include it in your brief. You can combine up to four.
                 </p>
                 <div className="bg-form-color-swatches">
-                  {COLOR_THEORY.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      className={`bg-form-color-swatch ${form.selected_colors.includes(c.id) ? "is-selected" : ""}`}
-                      style={{ background: c.gradient }}
-                      onClick={() => {
-                        const isSel = form.selected_colors.includes(c.id);
-                        if (!isSel && form.selected_colors.length >= 4) return;
-                        toggle("selected_colors", c.id);
-                      }}
-                    >
-                      <strong>{c.label}</strong>
-                      <span>{c.desc}</span>
-                    </button>
-                  ))}
+                  {COLOR_THEORY.map((c) => {
+                    const selected = form.selected_colors.includes(c.id);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className={`bg-form-color-swatch ${selected ? "is-selected" : ""}`}
+                        style={{ background: c.gradient }}
+                        aria-pressed={selected}
+                        onClick={() => {
+                          if (!selected && form.selected_colors.length >= 4) return;
+                          toggle("selected_colors", c.id);
+                        }}
+                      >
+                        <strong>{c.label}</strong>
+                        <span>{c.desc}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </section>

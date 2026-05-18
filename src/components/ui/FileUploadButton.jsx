@@ -3,6 +3,38 @@ import PropTypes from "prop-types";
 import { Upload } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 
+// Default whitelist for the file picker. Some browsers don't include SVG
+// in `image/*`, so we enumerate the extensions explicitly. The backend
+// also accepts these via its CONTENT_TYPE_BY_EXT map (helper/s3_storage.js).
+const DEFAULT_ACCEPT = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "image/svg+xml",
+  "image/bmp",
+  "image/tiff",
+  "image/avif",
+  "image/heic",
+  "image/heif",
+  ".svg",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
+  ".gif",
+  ".bmp",
+  ".tiff",
+  ".tif",
+  ".avif",
+  ".heic",
+  ".heif",
+  ".pdf",
+  ".psd",
+  ".ai",
+  ".eps",
+].join(",");
+
 /**
  * Multipart upload button. Hands the file to apiServices.upload_file and
  * calls onUploaded with { url, file } once the backend has stored it.
@@ -69,7 +101,7 @@ export default function FileUploadButton({
       <input
         ref={inputRef}
         type="file"
-        accept={accept}
+        accept={accept || DEFAULT_ACCEPT}
         multiple={multiple}
         onChange={handleChange}
         style={{ display: "none" }}

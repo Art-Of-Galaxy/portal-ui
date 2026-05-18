@@ -203,11 +203,19 @@ export default function OnboardingFlow() {
           <input className="onboard-input" placeholder="Brand/Company Name" value={business.brand_company_name} onChange={(e) => updateBusiness("brand_company_name", e.target.value)} />
           <input className="onboard-input" placeholder="Website URL" value={business.website_url} onChange={(e) => updateBusiness("website_url", e.target.value)} />
           <input className="onboard-input" placeholder="Phone Number" value={business.phone} onChange={(e) => updateBusiness("phone", e.target.value)} />
-          <input className="onboard-input" placeholder="Preferred Method of Communication" value={business.preferred_communication} onChange={(e) => updateBusiness("preferred_communication", e.target.value)} />
+          <select className="onboard-input" value={business.preferred_communication} onChange={(e) => updateBusiness("preferred_communication", e.target.value)}>
+            <option value="">Preferred Method of Communication</option>
+            <option value="email">Email</option>
+            <option value="sms">SMS</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="calls">Calls</option>
+            <option value="meeting">Meeting</option>
+          </select>
           <select className="onboard-input" value={business.offering_type} onChange={(e) => updateBusiness("offering_type", e.target.value)}>
             <option value="">Services or Product</option>
             <option value="Service">Service</option>
             <option value="Product">Product</option>
+            <option value="Digital product">Digital product</option>
           </select>
           <select className="onboard-input" value={business.industry} onChange={(e) => updateBusiness("industry", e.target.value)}>
             <option value="">Industry/Market Segment</option>

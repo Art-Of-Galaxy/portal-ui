@@ -109,6 +109,7 @@ export default function ProjectDetail() {
   }
 
   const output = safeParseJSON(project.output_data);
+  const input = safeParseJSON(project.input_data) || {};
   const serviceType = project.service_type;
 
   const renderOutput = () => {
@@ -156,6 +157,13 @@ export default function ProjectDetail() {
           model={project.model}
           seed={output.seed}
           errors={output.errors}
+          tagline={input.tagline}
+          businessDescription={input.business_description}
+          logoStyle={input.logo_style}
+          selectedColors={input.selected_colors}
+          customColors={input.custom_colors}
+          typography={input.selected_typography}
+          statusLabel={project.status_label}
         />
       );
     }
@@ -188,30 +196,35 @@ export default function ProjectDetail() {
         Back to My Projects
       </button>
 
-      <div className="proj-detail-head">
-        <div className="proj-detail-head-info">
-          <h1>{project.project_name}</h1>
-          <div className="proj-detail-tags">
-            {project.category ? (
-              <span className="proj-pill"><FolderKanban size={12} style={{ marginRight: 4, verticalAlign: -2 }} />{project.category}</span>
-            ) : null}
-            <span className={`proj-pill ${statusClass(project.status_label)}`}>{project.status_label}</span>
-            <span className="proj-pill">{project.priority_label} priority</span>
-            <span style={{ alignSelf: "center" }}>
-              Created {formatDate(project.created_at || project.created_date)}
-            </span>
+      {/* Logo design has its own sidebar with category / sub-service /
+          status / brand name, so the duplicate project header is hidden
+          for it. All other service types keep the project header. */}
+      {serviceType !== "logo_design" ? (
+        <div className="proj-detail-head">
+          <div className="proj-detail-head-info">
+            <h1>{project.project_name}</h1>
+            <div className="proj-detail-tags">
+              {project.category ? (
+                <span className="proj-pill"><FolderKanban size={12} style={{ marginRight: 4, verticalAlign: -2 }} />{project.category}</span>
+              ) : null}
+              <span className={`proj-pill ${statusClass(project.status_label)}`}>{project.status_label}</span>
+              <span className="proj-pill">{project.priority_label} priority</span>
+              <span style={{ alignSelf: "center" }}>
+                Created {formatDate(project.created_at || project.created_date)}
+              </span>
+            </div>
           </div>
+          <button
+            type="button"
+            className="proj-detail-delete"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            <Trash2 size={14} />
+            {deleting ? "Deleting…" : "Delete project"}
+          </button>
         </div>
-        <button
-          type="button"
-          className="proj-detail-delete"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          <Trash2 size={14} />
-          {deleting ? "Deleting…" : "Delete project"}
-        </button>
-      </div>
+      ) : null}
 
       {error ? (
         <div
