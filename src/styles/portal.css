@@ -1268,6 +1268,9 @@ html.portal-theme-dark {
   border-radius: 10px;
   cursor: pointer;
   min-width: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .portal-theme-dark .branding-btn-primary {
