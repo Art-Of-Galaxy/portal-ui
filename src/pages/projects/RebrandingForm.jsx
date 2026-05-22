@@ -198,65 +198,18 @@ export default function RebrandingForm() {
           <ArrowLeft size={16} />
           Back to Branding &amp; Design
         </button>
-
-        <div className="bg-form-shell">
-          <div className="bg-form-header">
-            <span className="bg-form-header-tile">
-              <RefreshCw size={20} />
-            </span>
-            <div>
-              <h2>Branding and Design</h2>
-              <p>Craft Identity. Inspire Loyalty. Drive Growth: Build a Brand That Stands Out.</p>
-            </div>
-          </div>
-
-          <div style={{ padding: "1.4rem 1.6rem" }}>
-            <div className="bg-thanks-card" style={{ padding: "1rem 0 1.6rem" }}>
-              <h2>Thank you — your rebranding plan is ready</h2>
-              <p>
-                We&apos;ve saved your request to <strong>My Projects</strong> under{" "}
-                <strong>Branding &amp; Design</strong>. Below is the AI-generated rebranding plan
-                your AOG strategist will review and refine with you.
-              </p>
-              <div className="bg-thanks-actions">
-                {result.project_id ? (
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    onClick={() => navigate(`/my-projects/${result.project_id}`)}
-                  >
-                    Open in My Projects
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    onClick={() => navigate("/my-projects")}
-                  >
-                    View My Projects
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="branding-btn-secondary"
-                  onClick={() => {
-                    setResult(null);
-                    setForm(initialForm);
-                  }}
-                >
-                  Request Another Design
-                </button>
-              </div>
-            </div>
-
-            <RebrandingView
-              rebranding={result.rebranding}
-              brandName={form.current_brand_name}
-              model={result.model}
-              usage={result.usage}
-            />
-          </div>
-        </div>
+        <RebrandingView
+          rebranding={result.rebranding}
+          brandName={form.current_brand_name}
+          description={form.motivation || form.whats_not_working}
+          tagline={form.perception_after || form.goals}
+          statusLabel="In progress"
+          projectId={result.project_id}
+          onAnotherRequest={() => {
+            setResult(null);
+            setForm(initialForm);
+          }}
+        />
       </div>
     );
   }

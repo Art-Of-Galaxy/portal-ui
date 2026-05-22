@@ -8,11 +8,41 @@ import ColorPicker from "../../components/ui/ColorPicker";
 import FileUploadButton from "../../components/ui/FileUploadButton";
 import { useLoading } from "../../context/LoadingContext";
 
-// Reference images per style folder. Each folder contains ~10 hand-picked
-// examples that show the model what we mean by that style. We display the
-// first 5 in the form for visual education and pass up to 3 as image_urls
-// to models that support image-conditioned generation (nano-banana,
-// gpt-image-1, recraft-v3).
+// --- Display references shown on the form ---
+// Restored to the original 25 hand-picked PNGs that match the existing
+// card design. Five per row, except Mascot which the original set didn't
+// cover — that row borrows its first 5 from the new Mascot/ folder so
+// the row no longer looks empty.
+import ref01 from "../../assets/branding/logo/3_1_Ref@2x.png";
+import ref02 from "../../assets/branding/logo/3_2_Ref@2x.png";
+import ref03 from "../../assets/branding/logo/3_3_Ref@2x.png";
+import ref04 from "../../assets/branding/logo/3_4_Ref@2x.png";
+import ref05 from "../../assets/branding/logo/3_5_Ref@2x.png";
+import ref06 from "../../assets/branding/logo/3_6_Ref@2x.png";
+import ref07 from "../../assets/branding/logo/3_7_Ref@2x.png";
+import ref08 from "../../assets/branding/logo/3_8_Ref@2x.png";
+import ref09 from "../../assets/branding/logo/3_9_Ref@2x.png";
+import ref10 from "../../assets/branding/logo/3_10_Ref@2x.png";
+import ref11 from "../../assets/branding/logo/3_11_Ref@2x.png";
+import ref12 from "../../assets/branding/logo/3_12_Ref@2x.png";
+import ref13 from "../../assets/branding/logo/3_13_Ref@2x.png";
+import ref14 from "../../assets/branding/logo/3_14_Ref@2x.png";
+import ref15 from "../../assets/branding/logo/3_15_Ref@2x.png";
+import ref16 from "../../assets/branding/logo/3_16_Ref@2x.png";
+import ref17 from "../../assets/branding/logo/3_17_Ref@2x.png";
+import ref18 from "../../assets/branding/logo/3_18_Ref@2x.png";
+import ref19 from "../../assets/branding/logo/3_19_Ref@2x.png";
+import ref20 from "../../assets/branding/logo/3_20_Ref@2x.png";
+import ref21 from "../../assets/branding/logo/3_21_Ref@2x.png";
+import ref22 from "../../assets/branding/logo/3_22_Ref@2x.png";
+import ref23 from "../../assets/branding/logo/3_23_Ref@2x.png";
+import ref24 from "../../assets/branding/logo/3_24_Ref@2x.png";
+import ref25 from "../../assets/branding/logo/3_25_Ref@2x.png";
+
+// --- Backend reference URLs ---
+// The newly added per-style folders (Vintage/, Mascot/, etc.). These are
+// NOT shown on the form — they're only sent to the AI as image_urls so
+// reference-aware models (nano-banana, recraft-v3) can match the style.
 function collectStyleRefs(modules) {
   // import.meta.glob returns { path: url }. Sort by path so 1, 2, 3 stay
   // in numeric order rather than alphabetical (1, 10, 2, 3...).
@@ -25,7 +55,7 @@ function collectStyleRefs(modules) {
     .map(([, url]) => url);
 }
 
-const STYLE_REFS = {
+const BACKEND_STYLE_REFS = {
   vintage:     collectStyleRefs(import.meta.glob("../../assets/branding/logo/Vintage/*",     { eager: true, query: "?url", import: "default" })),
   mascot:      collectStyleRefs(import.meta.glob("../../assets/branding/logo/Mascot/*",      { eager: true, query: "?url", import: "default" })),
   wordmark:    collectStyleRefs(import.meta.glob("../../assets/branding/logo/Woordmark/*",   { eager: true, query: "?url", import: "default" })),
@@ -46,12 +76,14 @@ const LOGO_LOADER_MESSAGES = [
 ];
 
 const LOGO_STYLES = [
-  { id: "vintage",     label: "Vintage",     refs: STYLE_REFS.vintage },
-  { id: "mascot",      label: "Mascot",      refs: STYLE_REFS.mascot },
-  { id: "wordmark",    label: "Wordmark",    refs: STYLE_REFS.wordmark },
-  { id: "monogram",    label: "Monogram",    refs: STYLE_REFS.monogram },
-  { id: "combination", label: "Combination", refs: STYLE_REFS.combination },
-  { id: "minimalist",  label: "Minimalist",  refs: STYLE_REFS.minimalist },
+  { id: "vintage",     label: "Vintage",     refs: [ref01, ref02, ref03, ref04, ref05] },
+  // Mascot wasn't covered by the original 3_X_Ref set, so it borrows the
+  // first 5 examples from the new Mascot/ folder.
+  { id: "mascot",      label: "Mascot",      refs: BACKEND_STYLE_REFS.mascot.slice(0, 5) },
+  { id: "wordmark",    label: "Wordmark",    refs: [ref06, ref07, ref08, ref09, ref10] },
+  { id: "monogram",    label: "Monogram",    refs: [ref11, ref12, ref13, ref14, ref15] },
+  { id: "combination", label: "Combination", refs: [ref16, ref17, ref18, ref19, ref20] },
+  { id: "minimalist",  label: "Minimalist",  refs: [ref21, ref22, ref23, ref24, ref25] },
 ];
 
 const COLOR_THEORY = [
@@ -189,10 +221,13 @@ export default function LogoDesignForm() {
         .filter(isValidHex);
 
       // Build the style reference URLs (first 3) for the chosen style.
-      // The backend will only forward these to models that support
-      // image conditioning (nano-banana, gpt-image-1, recraft-v3).
-      const styleEntry = LOGO_STYLES.find((s) => s.id === form.logo_style);
-      const styleRefUrls = (styleEntry?.refs || [])
+      // These come from the newer per-style folders (BACKEND_STYLE_REFS)
+      // — *not* the small display set the form shows — because they're
+      // the curated references we want the AI to actually condition on.
+      // Only forwarded to models that support image conditioning
+      // (nano-banana, recraft-v3).
+      const backendRefs = BACKEND_STYLE_REFS[form.logo_style] || [];
+      const styleRefUrls = backendRefs
         .slice(0, 3)
         .map(toAbsoluteUrl)
         .filter(Boolean);

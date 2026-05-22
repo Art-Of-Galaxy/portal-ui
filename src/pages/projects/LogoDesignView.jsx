@@ -3,6 +3,8 @@ import PropTypes from "prop-types";
 import {
   AlertTriangle,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Download,
   ImageOff,
   Maximize2,
@@ -130,6 +132,11 @@ function ConceptCard({
       className={`logo-concept-card ${selected ? "is-selected" : ""}`}
       onClick={() => onSelect(index)}
     >
+      {selected ? (
+        <span className="logo-concept-selected-badge" aria-label="Selected concept">
+          <Check size={12} />
+        </span>
+      ) : null}
       <div className="logo-concept-image">
         {broken ? (
           <div className="logo-concept-broken">
@@ -143,6 +150,18 @@ function ConceptCard({
             onError={() => onError(index)}
           />
         )}
+        {/* Hover overlay surfaces a clearer "click to preview" cue */}
+        {!broken ? (
+          <button
+            type="button"
+            className="logo-concept-hover"
+            onClick={(e) => { e.stopPropagation(); onPreview(index); }}
+            aria-label={`Open larger preview of concept ${index + 1}`}
+          >
+            <Maximize2 size={18} />
+            <span>Preview</span>
+          </button>
+        ) : null}
       </div>
       <div className="logo-concept-footer">
         <span className="logo-concept-name">Concept {index + 1}</span>
@@ -150,7 +169,7 @@ function ConceptCard({
           <button
             type="button"
             className="logo-concept-action-btn"
-            onClick={(e) => { e.stopPropagation(); onPreview(img); }}
+            onClick={(e) => { e.stopPropagation(); onPreview(index); }}
             aria-label={`Preview concept ${index + 1}`}
             title="Preview"
           >
@@ -200,13 +219,30 @@ export default function LogoDesignView({
   const [downloadingIndex, setDownloadingIndex] = useState(-1);
   const [downloadError, setDownloadError] = useState("");
   const [brokenIndices, setBrokenIndices] = useState(() => new Set());
-  const [previewImg, setPreviewImg] = useState(null);
+  const [previewIndex, setPreviewIndex] = useState(-1);
   const [revisionSent, setRevisionSent] = useState(false);
 
   useEffect(() => {
     // Keep selection valid when image set changes.
     if (selectedConcept >= usable.length) setSelectedConcept(0);
   }, [usable.length, selectedConcept]);
+
+  // Keyboard navigation while the preview overlay is open:
+  // Escape closes; ← / → step through the concepts.
+  useEffect(() => {
+    if (previewIndex < 0) return undefined;
+    const onKey = (event) => {
+      if (event.key === "Escape") {
+        setPreviewIndex(-1);
+      } else if (event.key === "ArrowRight") {
+        setPreviewIndex((i) => (i + 1) % usable.length);
+      } else if (event.key === "ArrowLeft") {
+        setPreviewIndex((i) => (i - 1 + usable.length) % usable.length);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [previewIndex, usable.length]);
 
   // ----- Palette -----
   const palette = useMemo(() => {
@@ -411,7 +447,7 @@ export default function LogoDesignView({
                 broken={brokenIndices.has(i)}
                 downloading={downloadingIndex === i}
                 onSelect={setSelectedConcept}
-                onPreview={(p) => setPreviewImg(p)}
+                onPreview={(idx) => setPreviewIndex(idx)}
                 onDownload={handleDownload}
                 onError={markBroken}
               />
@@ -456,26 +492,64 @@ export default function LogoDesignView({
         </div>
       </div>
 
-      {/* -------- Full-size preview overlay -------- */}
-      {previewImg ? (
+      {/* -------- Full-size preview overlay --------
+          Esc to close, ← / → to step between concepts (handled via the
+          useEffect above). Click outside the frame also closes. */}
+      {previewIndex >= 0 && usable[previewIndex] ? (
         <div
           className="logo-preview-overlay"
-          onClick={() => setPreviewImg(null)}
+          onClick={() => setPreviewIndex(-1)}
         >
+          <div className="logo-preview-counter">
+            Concept {previewIndex + 1} of {usable.length}
+          </div>
+
+          {usable.length > 1 ? (
+            <button
+              type="button"
+              className="logo-preview-nav is-prev"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewIndex((i) => (i - 1 + usable.length) % usable.length);
+              }}
+              aria-label="Previous concept"
+            >
+              <ChevronLeft size={22} />
+            </button>
+          ) : null}
+
           <button
             type="button"
             className="logo-preview-close"
-            onClick={() => setPreviewImg(null)}
+            onClick={(e) => { e.stopPropagation(); setPreviewIndex(-1); }}
             aria-label="Close preview"
           >
             <X size={18} />
           </button>
+
           <div
             className="logo-preview-frame"
             onClick={(e) => e.stopPropagation()}
           >
-            <SafeImage src={previewImg.url} alt="Logo concept preview" />
+            <SafeImage
+              src={usable[previewIndex].url}
+              alt={`Logo concept ${previewIndex + 1}`}
+            />
           </div>
+
+          {usable.length > 1 ? (
+            <button
+              type="button"
+              className="logo-preview-nav is-next"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewIndex((i) => (i + 1) % usable.length);
+              }}
+              aria-label="Next concept"
+            >
+              <ChevronRight size={22} />
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

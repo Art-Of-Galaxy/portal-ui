@@ -788,6 +788,7 @@ html.portal-theme-dark {
   flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -3970,6 +3971,48 @@ html.portal-theme-dark {
   box-shadow: 0 0 0 3px rgba(85, 64, 255, 0.18);
 }
 
+.logo-concept-selected-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--portal-accent-solid);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 6px rgba(85, 64, 255, 0.35);
+}
+
+/* Click anywhere on the image area to open the preview. The button
+   overlays the SafeImage but only becomes visible on hover. */
+.logo-concept-hover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(8, 13, 27, 0.55);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  border: 0;
+  cursor: zoom-in;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.logo-concept-card:hover .logo-concept-hover,
+.logo-concept-card:focus-within .logo-concept-hover {
+  opacity: 1;
+}
+.logo-concept-image {
+  position: relative;
+}
+
 .logo-concept-image {
   background: #ffffff;
   aspect-ratio: 1 / 1;
@@ -4165,4 +4208,318 @@ html.portal-theme-dark {
 }
 .logo-preview-close:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.logo-preview-counter {
+  position: absolute;
+  top: 1.3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+
+.logo-preview-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.logo-preview-nav:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+.logo-preview-nav.is-prev { left: 1.6rem; }
+.logo-preview-nav.is-next { right: 1.6rem; }
+
+/* =========================================================
+   Branding service result pages
+   (Rebranding / Brand Guidelines / E-Commerce Mockups)
+   Reuses .logo-result-* sidebar layout, adds new main-column
+   sections: glance cards, timeline, deliverables, engagement.
+   ========================================================= */
+
+.bg-out-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  min-width: 0;
+}
+
+/* Section title with a horizontal divider running to the right of the
+   heading, vertically centered (instead of underlining the heading). */
+.bg-out-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0 0 1rem;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--portal-text);
+}
+.bg-out-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--portal-border);
+}
+
+/* ----- Brand direction at a glance (3 cards) ----- */
+.bg-out-glance {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+}
+@media (max-width: 900px) {
+  .bg-out-glance { grid-template-columns: 1fr; }
+}
+
+.bg-out-glance-card {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: var(--logo-side-shadow, var(--portal-shadow-sm));
+}
+.bg-out-glance-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--portal-bg-soft);
+  color: var(--portal-text-muted);
+  display: grid;
+  place-items: center;
+}
+.bg-out-glance-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--portal-text-subtle);
+}
+.bg-out-glance-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--portal-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ----- Two-column row: Rollout Timeline + What You'll Receive ----- */
+.bg-out-twocol {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.4rem;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .bg-out-twocol { grid-template-columns: 1fr; }
+}
+
+/* ----- Rollout Timeline ----- */
+/* Numbered circles in a pink/rose outline, connected to each other by a
+   short vertical line running through the circle's centre on the right
+   side. The line is anchored to ::before of each step (except the last). */
+.bg-out-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.bg-out-timeline-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 0.85rem;
+  padding-bottom: 1.1rem;
+}
+.bg-out-timeline-step:last-child {
+  padding-bottom: 0;
+}
+.bg-out-timeline-step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 15px;            /* (column width 32 - line width 2) / 2 = 15 */
+  top: 32px;             /* just below the 28px circle (~30 incl. border) */
+  bottom: -2px;
+  width: 2px;
+  background: rgba(255, 110, 196, 0.55);
+  border-radius: 1px;
+}
+.bg-out-timeline-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #ff6ec4;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--portal-text-muted);
+  background: var(--portal-card-bg);
+  position: relative;
+  z-index: 1;
+}
+.bg-out-timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.bg-out-timeline-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.bg-out-timeline-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--portal-text-muted);
+}
+.bg-out-timeline-duration {
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--portal-bg-soft);
+  color: var(--portal-text-muted);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+.bg-out-timeline-detail {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--portal-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ----- What You'll Receive (deliverables) ----- */
+.bg-out-deliverables {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  box-shadow: var(--logo-side-shadow, var(--portal-shadow-sm));
+}
+.bg-out-deliverable-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.bg-out-deliverable-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--portal-text);
+}
+.bg-out-deliverable-detail {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--portal-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ----- Engagement card (full-width footer) ----- */
+.bg-out-engagement {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  padding: 1.2rem 1.4rem;
+  box-shadow: var(--logo-side-shadow, var(--portal-shadow-sm));
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.6rem;
+  align-items: center;
+}
+@media (max-width: 760px) {
+  .bg-out-engagement { grid-template-columns: 1fr; }
+}
+.bg-out-engagement-text {
+  margin: 0 0 0.6rem;
+  font-size: 13px;
+  color: var(--portal-text);
+}
+.bg-out-engagement-text strong {
+  color: var(--portal-text);
+}
+.bg-out-engagement-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.bg-out-engagement-list li {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--portal-text);
+}
+.bg-out-engagement-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-self: center;
+}
+.bg-out-cta-primary {
+  background: linear-gradient(135deg, #5540ff 0%, #00d4a3 100%);
+  color: #ffffff;
+  border: 0;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: var(--portal-shadow-sm);
+  min-width: 200px;
+}
+.bg-out-cta-primary:hover { filter: brightness(1.05); }
+
+.bg-out-cta-secondary {
+  background: #0e2640;
+  color: #ffffff;
+  border: 0;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: var(--portal-shadow-sm);
+  min-width: 200px;
+}
+.portal-theme-dark .bg-out-cta-secondary { background: #1e1b48; }
+.bg-out-cta-secondary:hover { filter: brightness(1.1); }
+
+.bg-out-meta {
+  margin: 0;
+  font-size: 11px;
+  color: var(--portal-text-subtle);
 }

@@ -1,82 +1,49 @@
 import PropTypes from "prop-types";
-import {
-  Sparkles,
-  Compass,
-  MessageCircle,
-  Eye,
-  Type,
-  Palette,
-  PackageCheck,
-  ListChecks,
-} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Compass, MessageCircle, Palette } from "lucide-react";
+import BrandingResultShell from "../../components/BrandingResultShell";
 
-function pickFontStack(classification) {
-  const c = String(classification || "").toLowerCase();
-  if (c.includes("serif") && !c.includes("sans")) return "Georgia, 'Times New Roman', serif";
-  if (c.includes("sans")) return "Inter, 'Helvetica Neue', Arial, sans-serif";
-  if (c.includes("script")) return "'Brush Script MT', cursive";
-  if (c.includes("modern")) return "Arial Black, sans-serif";
-  if (c.includes("display")) return "Georgia, serif";
-  if (c.includes("condensed")) return "'Arial Narrow', Impact, sans-serif";
-  return "Inter, sans-serif";
+// Brand Guidelines output. Same fixed 4-phase / 4-deliverable structure
+// as the Rebranding view so the page reads consistently. Descriptions
+// fall back to a sensible template when the AI doesn't fill them in.
+
+const FIXED_PHASES = [
+  { name: "Discovery & Strategy",       duration: "1-2 weeks", fallback: "Brand interviews, audience sharpening, competitor mapping, positioning lock-in." },
+  { name: "Visual System Design",       duration: "2-3 weeks", fallback: "Type system, color system, logo direction, imagery direction. 2 directions → 1 final." },
+  { name: "Documentation",              duration: "1-2 weeks", fallback: "Brand manual: usage rules, do's & don'ts, voice + tone guides, templates." },
+  { name: "Handoff & Enablement",       duration: "1 week",    fallback: "Asset library handover, team walk-through, ongoing-use guardrails." },
+];
+
+const FIXED_DELIVERABLES = [
+  { name: "Brand Manual",           fallback: "Logo usage, color, typography, imagery, voice." },
+  { name: "Visual Identity Pack",   fallback: "Logo files, color tokens, type system, mood/imagery." },
+  { name: "Voice & Tone Playbook",  fallback: "Voice principles, tone flex, do/don't say, sample copy." },
+  { name: "Templates & Components", fallback: "Social, presentation, email + 1 sample marketing layout." },
+];
+
+function clip(text, max = 220) {
+  const s = String(text || "").trim();
+  if (!s) return "";
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
-function isLight(hex) {
-  if (!hex || typeof hex !== "string") return false;
-  const m = hex.replace("#", "");
-  if (m.length !== 6) return false;
-  const r = parseInt(m.slice(0, 2), 16);
-  const g = parseInt(m.slice(2, 4), 16);
-  const b = parseInt(m.slice(4, 6), 16);
-  // standard luminance approximation
-  const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return l > 0.7;
+function describeColors(color_system) {
+  const all = []
+    .concat(Array.isArray(color_system?.primary) ? color_system.primary : [])
+    .concat(Array.isArray(color_system?.secondary) ? color_system.secondary : [])
+    .slice(0, 3);
+  if (!all.length) return "";
+  return all.map((c) => `${c.name || c.hex}`).join(" · ");
 }
 
-function ColorChip({ swatch }) {
-  if (!swatch) return null;
-  const hex = (swatch.hex || "").toUpperCase();
-  const textColor = isLight(hex) ? "#0f1c2e" : "#fff";
-  return (
-    <div className="bg-view-color" style={{ background: hex || "#888", color: textColor }}>
-      <strong>{swatch.name || hex}</strong>
-      <code style={{ color: textColor, opacity: 0.85 }}>{hex}</code>
-      {swatch.usage ? <span>{swatch.usage}</span> : null}
-    </div>
-  );
-}
-
-ColorChip.propTypes = {
-  swatch: PropTypes.shape({
-    name: PropTypes.string,
-    hex: PropTypes.string,
-    usage: PropTypes.string,
-  }),
-};
-
-ColorChip.defaultProps = { swatch: null };
-
-function Section({ icon: Icon, title, children }) {
-  return (
-    <section className="bg-view-section">
-      <header className="bg-view-section-head">
-        <span className="bg-view-section-icon">
-          <Icon size={16} />
-        </span>
-        <h3>{title}</h3>
-      </header>
-      {children}
-    </section>
-  );
-}
-
-Section.propTypes = {
-  icon: PropTypes.elementType.isRequired,
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-};
-
-export default function BrandGuidelinesView({ guidelines, brandName, model, usage }) {
+export default function BrandGuidelinesView({
+  guidelines,
+  brandName,
+  description,
+  tagline,
+  statusLabel,
+}) {
+  const navigate = useNavigate();
   if (!guidelines || typeof guidelines !== "object") {
     return (
       <div className="portal-card">
@@ -87,242 +54,151 @@ export default function BrandGuidelinesView({ guidelines, brandName, model, usag
 
   const verbal = guidelines.verbal_identity || {};
   const visual = guidelines.visual_identity || {};
-  const typography = guidelines.typography || {};
-  const colors = guidelines.color_system || {};
+  const colorSys = guidelines.color_system || {};
+  const aiDeliv = Array.isArray(guidelines.deliverables) ? guidelines.deliverables : [];
+  const nextSteps = Array.isArray(guidelines.next_steps) ? guidelines.next_steps : [];
+
+  const sideDescription = description || guidelines.brand_summary || "";
+  const sideTagline = tagline || guidelines.positioning_statement || "";
+
+  const verbalCard = verbal.voice
+    ? verbal.voice
+    : (Array.isArray(verbal.tagline_options) && verbal.tagline_options[0]) || "";
+  const visualCard = visual.logo_direction
+    ? visual.logo_direction
+    : (Array.isArray(visual.mood_keywords) && visual.mood_keywords.join(", ")) || "";
+  const colorCard = describeColors(colorSys) || colorSys.rationale || "";
+
+  // Brand Guidelines doesn't carry its own rollout plan — use the fixed
+  // template directly. (Visual / verbal identity content powers the
+  // glance cards above instead.)
+  const phases = FIXED_PHASES.map((tpl) => ({ ...tpl, description: tpl.fallback }));
+
+  const deliverables = FIXED_DELIVERABLES.map((tpl, i) => {
+    const ai = aiDeliv[i];
+    const detail = ai && typeof ai === "object" ? (ai.scope || ai.item) :
+                   (typeof ai === "string" ? ai : null);
+    return { ...tpl, description: detail || tpl.fallback };
+  });
 
   return (
-    <div className="bg-view">
-      <div className="bg-view-hero">
-        <div className="bg-view-hero-tag">Brand brief</div>
-        <h2>{brandName || "Brand Guidelines"}</h2>
-        {guidelines.brand_summary ? <p>{guidelines.brand_summary}</p> : null}
-        {guidelines.positioning_statement ? (
-          <blockquote className="bg-view-quote">
-            <Compass size={14} />
-            <span>{guidelines.positioning_statement}</span>
-          </blockquote>
-        ) : null}
-      </div>
-
-      {/* Verbal Identity */}
-      <Section icon={MessageCircle} title="Verbal identity">
-        <div className="bg-view-grid-2">
-          {verbal.voice ? (
-            <div className="bg-view-card">
-              <h4>Voice</h4>
-              <p>{verbal.voice}</p>
-            </div>
-          ) : null}
-          {verbal.tone ? (
-            <div className="bg-view-card">
-              <h4>Tone</h4>
-              <p>{verbal.tone}</p>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="bg-view-grid-2">
-          {Array.isArray(verbal.do_say) && verbal.do_say.length ? (
-            <div className="bg-view-card">
-              <h4>Do say</h4>
-              <ul className="bg-view-bullets bg-view-do">
-                {verbal.do_say.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          {Array.isArray(verbal.dont_say) && verbal.dont_say.length ? (
-            <div className="bg-view-card">
-              <h4>Don&apos;t say</h4>
-              <ul className="bg-view-bullets bg-view-dont">
-                {verbal.dont_say.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-
-        {Array.isArray(verbal.tagline_options) && verbal.tagline_options.length ? (
-          <div className="bg-view-card">
-            <h4>Tagline options</h4>
-            <ol className="bg-view-numbers">
-              {verbal.tagline_options.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ol>
+    <BrandingResultShell
+      brandName={brandName}
+      description={sideDescription}
+      tagline={sideTagline}
+      subServiceLabel="Brand Guidelines Dev"
+      status={statusLabel || "In progress"}
+    >
+      <section>
+        <h3 className="bg-out-section-title">Brand direction at a glance</h3>
+        <div className="bg-out-glance">
+          <div className="bg-out-glance-card">
+            <span className="bg-out-glance-icon"><Compass size={16} /></span>
+            <span className="bg-out-glance-label">Positioning</span>
+            <p className="bg-out-glance-body">{clip(guidelines.positioning_statement || guidelines.brand_summary)}</p>
           </div>
-        ) : null}
-      </Section>
-
-      {/* Visual Identity */}
-      <Section icon={Eye} title="Visual identity">
-        <div className="bg-view-grid-2">
-          {visual.logo_direction ? (
-            <div className="bg-view-card">
-              <h4>Logo direction</h4>
-              <p>{visual.logo_direction}</p>
-            </div>
-          ) : null}
-          {visual.imagery_direction ? (
-            <div className="bg-view-card">
-              <h4>Imagery direction</h4>
-              <p>{visual.imagery_direction}</p>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="bg-view-grid-2">
-          {Array.isArray(visual.design_principles) && visual.design_principles.length ? (
-            <div className="bg-view-card">
-              <h4>Design principles</h4>
-              <ul className="bg-view-bullets">
-                {visual.design_principles.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          {Array.isArray(visual.mood_keywords) && visual.mood_keywords.length ? (
-            <div className="bg-view-card">
-              <h4>Mood</h4>
-              <div className="bg-view-tags">
-                {visual.mood_keywords.map((k, i) => (
-                  <span key={i} className="bg-view-tag">{k}</span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </Section>
-
-      {/* Typography */}
-      {(typography.display || typography.body) ? (
-        <Section icon={Type} title="Typography">
-          <div className="bg-view-grid-2">
-            {typography.display ? (
-              <div className="bg-view-card">
-                <span className="bg-view-eyebrow">Display</span>
-                <h4 style={{ fontFamily: pickFontStack(typography.display.classification), fontSize: 26, margin: "0.3rem 0 0.4rem" }}>
-                  {typography.display.family || "—"}
-                </h4>
-                <p>
-                  <strong>{typography.display.classification || "—"}</strong>
-                  {typography.display.usage ? ` · ${typography.display.usage}` : ""}
-                </p>
-              </div>
-            ) : null}
-            {typography.body ? (
-              <div className="bg-view-card">
-                <span className="bg-view-eyebrow">Body</span>
-                <h4 style={{ fontFamily: pickFontStack(typography.body.classification), fontSize: 22, margin: "0.3rem 0 0.4rem" }}>
-                  {typography.body.family || "—"}
-                </h4>
-                <p>
-                  <strong>{typography.body.classification || "—"}</strong>
-                  {typography.body.usage ? ` · ${typography.body.usage}` : ""}
-                </p>
-              </div>
-            ) : null}
+          <div className="bg-out-glance-card">
+            <span className="bg-out-glance-icon"><MessageCircle size={16} /></span>
+            <span className="bg-out-glance-label">Voice &amp; Tone</span>
+            <p className="bg-out-glance-body">{clip(verbalCard)}</p>
           </div>
-          {typography.rationale ? (
-            <div className="bg-view-rationale">
-              <strong>Why this pair: </strong>
-              {typography.rationale}
-            </div>
-          ) : null}
-        </Section>
-      ) : null}
+          <div className="bg-out-glance-card">
+            <span className="bg-out-glance-icon"><Palette size={16} /></span>
+            <span className="bg-out-glance-label">Visual Direction</span>
+            <p className="bg-out-glance-body">
+              {clip(visualCard)}
+              {colorCard ? <><br /><small style={{ color: "var(--portal-text-muted)" }}>{colorCard}</small></> : null}
+            </p>
+          </div>
+        </div>
+      </section>
 
-      {/* Colors */}
-      {(colors.primary || colors.secondary || colors.neutrals) ? (
-        <Section icon={Palette} title="Color system">
-          {Array.isArray(colors.primary) && colors.primary.length ? (
-            <>
-              <h4 className="bg-view-subhead">Primary</h4>
-              <div className="bg-view-color-row">
-                {colors.primary.map((s, i) => <ColorChip key={`p${i}`} swatch={s} />)}
-              </div>
-            </>
-          ) : null}
-          {Array.isArray(colors.secondary) && colors.secondary.length ? (
-            <>
-              <h4 className="bg-view-subhead">Secondary</h4>
-              <div className="bg-view-color-row">
-                {colors.secondary.map((s, i) => <ColorChip key={`s${i}`} swatch={s} />)}
-              </div>
-            </>
-          ) : null}
-          {Array.isArray(colors.neutrals) && colors.neutrals.length ? (
-            <>
-              <h4 className="bg-view-subhead">Neutrals</h4>
-              <div className="bg-view-color-row">
-                {colors.neutrals.map((s, i) => <ColorChip key={`n${i}`} swatch={s} />)}
-              </div>
-            </>
-          ) : null}
-          {colors.rationale ? (
-            <div className="bg-view-rationale">
-              <strong>Why this palette: </strong>
-              {colors.rationale}
-            </div>
-          ) : null}
-        </Section>
-      ) : null}
-
-      {/* Deliverables */}
-      {Array.isArray(guidelines.deliverables) && guidelines.deliverables.length ? (
-        <Section icon={PackageCheck} title="Deliverables — what you'll receive">
-          <ul className="bg-view-deliverables">
-            {guidelines.deliverables.map((d, i) => (
-              <li key={i}>
-                <span className="bg-view-check"><Sparkles size={12} /></span>
-                {d}
+      <div className="bg-out-twocol">
+        <section>
+          <h3 className="bg-out-section-title">Delivery Timeline</h3>
+          <ol className="bg-out-timeline">
+            {phases.map((step, i) => (
+              <li key={i} className="bg-out-timeline-step">
+                <span className="bg-out-timeline-num">{i + 1}</span>
+                <div className="bg-out-timeline-content">
+                  <div className="bg-out-timeline-head">
+                    <span className="bg-out-timeline-name">{step.name}</span>
+                    <span className="bg-out-timeline-duration">{step.duration}</span>
+                  </div>
+                  <p className="bg-out-timeline-detail">{step.description}</p>
+                </div>
               </li>
             ))}
-          </ul>
-        </Section>
-      ) : null}
+          </ol>
+        </section>
 
-      {/* Next steps */}
-      {Array.isArray(guidelines.next_steps) && guidelines.next_steps.length ? (
-        <Section icon={ListChecks} title="Next steps — what happens next">
-          <ol className="bg-view-numbers bg-view-next">
-            {guidelines.next_steps.map((s, i) => (
+        <section>
+          <h3 className="bg-out-section-title">What You&apos;ll Receive</h3>
+          <div className="bg-out-deliverables">
+            {deliverables.map((d, i) => (
+              <div key={i} className="bg-out-deliverable-item">
+                <span className="bg-out-deliverable-name">{d.name}:</span>
+                <p className="bg-out-deliverable-detail">{d.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="bg-out-engagement">
+        <div>
+          <p className="bg-out-engagement-text">
+            <strong>Let&apos;s lock in your engagement:</strong>{" "}
+            Here&apos;s exactly what we need to kick off this week.
+          </p>
+          <ol className="bg-out-engagement-list">
+            {(nextSteps.length ? nextSteps : [
+              "Review and sign off on this plan — confirm scope, timeline, and budget with your AOG strategist.",
+              "Share existing brand assets (logo, fonts, colors) and any prior style guides we should evolve from.",
+              "Send 3-5 brands you admire so we have concrete reference points for the visual direction.",
+              "Schedule a 60-min discovery call with your team's decision-maker so we can lock voice and tone.",
+            ]).slice(0, 4).map((s, i) => (
               <li key={i}>{s}</li>
             ))}
           </ol>
-        </Section>
-      ) : null}
-
-      {model || usage ? (
-        <p className="bg-view-meta">
-          Generated with <strong>{model}</strong>
-          {usage ? (
-            <>
-              {" "}· input {usage.input_tokens} tok · output {usage.output_tokens} tok
-              {usage.cache_read_input_tokens
-                ? ` · cache read ${usage.cache_read_input_tokens}`
-                : ""}
-            </>
-          ) : null}
-        </p>
-      ) : null}
-    </div>
+        </div>
+        <div className="bg-out-engagement-actions">
+          <button
+            type="button"
+            className="bg-out-cta-primary"
+            onClick={() => navigate("/support")}
+          >
+            Schedule discovery call
+          </button>
+          <button
+            type="button"
+            className="bg-out-cta-secondary"
+            onClick={() => navigate("/support")}
+          >
+            Message your strategist
+          </button>
+        </div>
+      </section>
+    </BrandingResultShell>
   );
 }
 
 BrandGuidelinesView.propTypes = {
   guidelines: PropTypes.object,
   brandName: PropTypes.string,
-  model: PropTypes.string,
-  usage: PropTypes.object,
+  description: PropTypes.string,
+  tagline: PropTypes.string,
+  statusLabel: PropTypes.string,
+  projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onAnotherRequest: PropTypes.func,
 };
 
 BrandGuidelinesView.defaultProps = {
   guidelines: null,
   brandName: "",
-  model: "",
-  usage: null,
+  description: "",
+  tagline: "",
+  statusLabel: "",
+  projectId: null,
+  onAnotherRequest: undefined,
 };

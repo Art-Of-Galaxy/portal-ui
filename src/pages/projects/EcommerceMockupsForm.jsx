@@ -217,65 +217,18 @@ export default function EcommerceMockupsForm() {
           <ArrowLeft size={16} />
           Back to Branding &amp; Design
         </button>
-
-        <div className="bg-form-shell">
-          <div className="bg-form-header">
-            <span className="bg-form-header-tile">
-              <ShoppingBag size={20} />
-            </span>
-            <div>
-              <h2>Branding and Design</h2>
-              <p>Craft Identity. Inspire Loyalty. Drive Growth: Build a Brand That Stands Out.</p>
-            </div>
-          </div>
-
-          <div style={{ padding: "1.4rem 1.6rem" }}>
-            <div className="bg-thanks-card" style={{ padding: "1rem 0 1.6rem" }}>
-              <h2>Thank you for your request!</h2>
-              <p>
-                We&apos;ve received your <strong>E-Commerce Mockups</strong> brief and our team will start
-                reviewing it shortly. Below is the AI-generated creative brief your AOG strategist will
-                refine with you.
-              </p>
-              <div className="bg-thanks-actions">
-                {result.project_id ? (
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    onClick={() => navigate(`/my-projects/${result.project_id}`)}
-                  >
-                    Open in My Projects
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="branding-btn-primary"
-                    onClick={() => navigate("/my-projects")}
-                  >
-                    View My Projects
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="branding-btn-secondary"
-                  onClick={() => {
-                    setResult(null);
-                    setForm(initialForm);
-                  }}
-                >
-                  Request Another Design
-                </button>
-              </div>
-            </div>
-
-            <EcommerceMockupsView
-              mockups={result.mockups}
-              productName={form.product_name}
-              model={result.model}
-              usage={result.usage}
-            />
-          </div>
-        </div>
+        <EcommerceMockupsView
+          mockups={result.mockups}
+          productName={form.product_name}
+          description={form.product_description}
+          tagline={form.highlight_features}
+          statusLabel="In progress"
+          projectId={result.project_id}
+          onAnotherRequest={() => {
+            setResult(null);
+            setForm(initialForm);
+          }}
+        />
       </div>
     );
   }
