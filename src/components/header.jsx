@@ -10,6 +10,7 @@ import {
   Sun,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import CreditsBadge from "./CreditsBadge";
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -39,6 +40,8 @@ export function Header() {
         </button>
 
         <span className="portal-header-divider" />
+
+        <CreditsBadge />
 
         <button type="button" className="portal-icon-btn is-accent" aria-label="Notifications">
           <Bell size={18} />

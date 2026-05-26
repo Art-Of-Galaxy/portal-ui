@@ -20,6 +20,7 @@ import {
   ChevronDown,
   LogOut,
   Settings,
+  Sparkles,
 } from "lucide-react";
 import PropTypes from "prop-types";
 import { appLogo } from "../assets";
@@ -29,6 +30,7 @@ import { signUpLogout } from "../redux/signUpSlice";
 const NAV_ITEMS = [
   { icon: Home, label: "Home", path: "/home" },
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Sparkles, label: "AI Manager", path: "/ai-manager", badge: { text: "New", tone: "accent" } },
   { icon: Briefcase, label: "New Projects", path: "/new-projects" },
   { icon: Users, label: "Customers", path: "/customers" },
   { icon: MessageSquare, label: "Conversations", path: "/conversations" },

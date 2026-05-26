@@ -13,7 +13,10 @@ import BrandingDesign from "../pages/projects/BrandingDesign";
 import BrandGuidelinesForm from "../pages/projects/BrandGuidelinesForm";
 import RebrandingForm from "../pages/projects/RebrandingForm";
 import EcommerceMockupsForm from "../pages/projects/EcommerceMockupsForm";
-import LogoDesignForm from "../pages/projects/LogoDesignForm";
+import LogoDesign from "../pages/projects/LogoDesign";
+import LogoDesignStrategist from "../pages/projects/LogoDesignStrategist";
+import LogoDesignQuiz from "../pages/projects/LogoDesignQuiz";
+import AIManager from "../pages/AIManager";
 import MyFiles from "../pages/files/MyFiles";
 import ProjectDetail from "../pages/projects/ProjectDetail";
 import Authentication from "../components/Authentication";
@@ -46,13 +49,16 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={withLayout(Home)} />
           <Route path="/dashboard" element={withLayout(Dashboard)} />
+          <Route path="/ai-manager" element={withLayout(AIManager)} />
 
           {/* Portal "New Projects" — service catalog */}
           <Route path="/new-projects" element={withLayout(NewProject)} />
           <Route path="/new-projects/branding-design" element={withLayout(BrandingDesign)} />
 
           {/* Branding & Design tool agents (placeholders until each is built) */}
-          <Route path="/new-projects/branding-design/logo" element={withLayout(LogoDesignForm)} />
+          <Route path="/new-projects/branding-design/logo" element={withLayout(LogoDesign)} />
+          <Route path="/new-projects/branding-design/logo/strategist" element={withLayout(LogoDesignStrategist)} />
+          <Route path="/new-projects/branding-design/logo/quiz" element={withLayout(LogoDesignQuiz)} />
           <Route path="/new-projects/branding-design/brand-guidelines" element={withLayout(BrandGuidelinesForm)} />
           <Route path="/new-projects/branding-design/printing" element={withLayout(ComingSoon, { title: "Printing Design", description: "Print-ready collateral powered by GPT and Claude Sonnet. Tool flow coming soon." })} />
           <Route path="/new-projects/branding-design/rebranding" element={withLayout(RebrandingForm)} />

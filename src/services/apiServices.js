@@ -146,6 +146,72 @@ export const apiServices = {
         });
         return response;
     },
+
+    // ---------- AI Strategist (conversational intake) ----------
+    strategist_start: async ({ service }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('strategist/sessions', {
+            method: 'POST',
+            body: { service, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    strategist_get: async (id) => fetchWithConfig(`strategist/sessions/${id}`, { method: 'GET' }),
+    strategist_list: async ({ service } = {}) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const qs = new URLSearchParams();
+        if (service) qs.set('service', service);
+        if (userEmail) qs.set('user_email', userEmail);
+        const suffix = qs.toString() ? `?${qs.toString()}` : '';
+        return fetchWithConfig(`strategist/sessions${suffix}`, { method: 'GET' });
+    },
+    strategist_turn: async ({ session_id, message, model }) => fetchWithConfig(
+        `strategist/sessions/${session_id}/turn`,
+        {
+            method: 'POST',
+            body: { message, model },
+            headers: { 'Content-Type': 'application/json' },
+        }
+    ),
+    strategist_complete: async ({ session_id, project_id }) => fetchWithConfig(
+        `strategist/sessions/${session_id}/complete`,
+        {
+            method: 'POST',
+            body: { project_id },
+            headers: { 'Content-Type': 'application/json' },
+        }
+    ),
+
+    // ---------- Quiz drafts (Fill it out yourself) ----------
+    quiz_draft_start: async ({ service }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('quiz-drafts', {
+            method: 'POST',
+            body: { service, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    quiz_draft_get: async (id) => fetchWithConfig(`quiz-drafts/${id}`, { method: 'GET' }),
+    quiz_draft_patch: async ({ id, step, brief }) => fetchWithConfig(`quiz-drafts/${id}`, {
+        method: 'PATCH',
+        body: { step, brief },
+        headers: { 'Content-Type': 'application/json' },
+    }),
+    quiz_draft_complete: async ({ id, project_id }) => fetchWithConfig(`quiz-drafts/${id}/complete`, {
+        method: 'POST',
+        body: { project_id },
+        headers: { 'Content-Type': 'application/json' },
+    }),
+
+    // ---------- Usage / credits ----------
+    usage_summary: async ({ sinceDays = 30 } = {}) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const qs = new URLSearchParams();
+        qs.set('since_days', String(sinceDays));
+        if (userEmail) qs.set('user_email', userEmail);
+        return fetchWithConfig(`usage/summary?${qs.toString()}`, { method: 'GET' });
+    },
+
     upload_file: async (file, { projectId, projectName, category, serviceType } = {}) => {
         // Try the presigned-upload flow first: ask the backend for a short-lived
         // S3 PUT URL, upload the bytes directly to S3, then confirm. This

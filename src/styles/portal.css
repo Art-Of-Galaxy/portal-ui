@@ -22,6 +22,17 @@
   --portal-accent: linear-gradient(90deg, #5540ff 0%, #00ff89 100%);
   --portal-accent-solid: #5540ff;
   --portal-accent-soft: rgba(85, 64, 255, 0.08);
+  --portal-accent-tint: rgba(85, 64, 255, 0.14);
+  /* Brand greens: #00ff89 is the brand green, but it's too light to read
+     on a white background as text. Use --portal-brand-green-text for
+     check marks / "done" labels and the bright green for accents. */
+  --portal-brand-green: #00ff89;
+  --portal-brand-green-text: #0a8d56;
+  --portal-brand-green-soft: rgba(0, 255, 137, 0.14);
+  --portal-brand-purple: #7c3aed;
+  --portal-brand-pink: #ec4899;
+  --portal-brand-navy: #1e1b48;
+  --portal-brand-blue: #377cc7;
   --portal-success: #00c074;
   --portal-danger: #e84d4d;
   --portal-badge-new: #2e60ff;
@@ -1347,7 +1358,11 @@ html.portal-theme-dark {
 
 .bg-form-body {
   display: grid;
-  grid-template-columns: 240px 1fr 240px;
+  /* minmax(0, 1fr) so the middle column can shrink below its intrinsic
+     content width — otherwise long swatch text / 5-thumb rows push the
+     right meeting sidebar past the shell's max-width and it gets
+     clipped by overflow:hidden. */
+  grid-template-columns: 240px minmax(0, 1fr) 240px;
   gap: 1.4rem;
   padding: 1.4rem 1.6rem 1.8rem;
 }
@@ -1491,7 +1506,7 @@ html.portal-theme-dark {
 
 .bg-form-color-swatches {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
   margin-top: 0.8rem;
 }
@@ -1533,7 +1548,7 @@ html.portal-theme-dark {
 
 .bg-form-typography-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
   margin-top: 0.7rem;
 }
@@ -1541,7 +1556,7 @@ html.portal-theme-dark {
 @media (max-width: 720px) {
   .bg-form-typography-grid,
   .bg-form-color-swatches {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -1586,7 +1601,7 @@ html.portal-theme-dark {
 
 .logo-style-row {
   display: grid;
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: 110px minmax(0, 1fr);
   align-items: center;
   gap: 0.8rem;
   padding: 0.7rem 0.9rem;
@@ -1617,7 +1632,7 @@ html.portal-theme-dark {
 
 .logo-style-thumbs {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
@@ -1645,10 +1660,10 @@ html.portal-theme-dark {
 
 @media (max-width: 720px) {
   .logo-style-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .logo-style-thumbs {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -3991,26 +4006,16 @@ html.portal-theme-dark {
 
 /* Click anywhere on the image area to open the preview. The button
    overlays the SafeImage but only becomes visible on hover. */
+/* Invisible click target overlaying the concept image. We keep the
+   click-to-preview behaviour but drop the dark hover overlay + expand
+   icon: the cursor change is the only affordance. */
 .logo-concept-hover {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: rgba(8, 13, 27, 0.55);
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
+  background: transparent;
   border: 0;
+  padding: 0;
   cursor: zoom-in;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-.logo-concept-card:hover .logo-concept-hover,
-.logo-concept-card:focus-within .logo-concept-hover {
-  opacity: 1;
 }
 .logo-concept-image {
   position: relative;
@@ -4067,7 +4072,9 @@ html.portal-theme-dark {
   display: grid;
   place-items: center;
   cursor: pointer;
+  padding: 0;
 }
+.logo-concept-action-btn img { width: 14px; height: 14px; display: block; }
 .logo-concept-action-btn:hover {
   background: var(--portal-accent-soft);
   color: var(--portal-text);
@@ -4076,6 +4083,8 @@ html.portal-theme-dark {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.logo-concept-hover-icon { width: 20px; height: 20px; }
 
 /* Revision card */
 .logo-revision-card {
@@ -4525,4 +4534,1580 @@ html.portal-theme-dark {
   margin: 0;
   font-size: 11px;
   color: var(--portal-text-subtle);
+}
+
+/* =========================================================
+   Logo Design — Method picker (Strategist vs Quiz)
+   ========================================================= */
+
+.method-picker-page { padding-bottom: 4rem; }
+.method-picker-crumb { color: var(--portal-text); font-weight: 600; }
+
+.method-picker-shell {
+  max-width: 1180px;
+  margin: 2.4rem auto 0;
+  padding: 0 1rem;
+}
+
+.method-picker-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.method-picker-header h1 {
+  margin: 0 0 0.6rem;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--portal-text);
+}
+
+.method-picker-header p {
+  margin: 0 auto;
+  max-width: 640px;
+  font-size: 14px;
+  color: var(--portal-text-muted);
+  line-height: 1.5;
+}
+
+.method-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem;
+}
+
+@media (max-width: 820px) {
+  .method-picker-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.method-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  background: var(--portal-card-bg);
+  border: 2px solid transparent;
+  border-radius: 22px;
+  padding: 2rem 2rem 2.2rem;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.2s, transform 0.15s;
+  box-shadow: var(--portal-shadow-sm);
+}
+
+/* Each method card gets a constant subtle border in its brand color so
+   the two paths are visually distinct without needing hover, matching
+   the design files (purple outline on Strategist, green on Quiz). */
+.method-card.is-strategist { border-color: var(--portal-accent-tint); }
+.method-card.is-quiz { border-color: var(--portal-brand-green-soft); }
+
+.method-card:hover {
+  box-shadow: var(--portal-shadow-md);
+  transform: translateY(-2px);
+}
+
+.method-card.is-strategist:hover { border-color: var(--portal-accent-solid); }
+.method-card.is-quiz:hover { border-color: var(--portal-brand-green); }
+
+.method-card-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  width: fit-content;
+  margin-bottom: 1.4rem;
+}
+
+.method-card-pill.is-strategist {
+  background: var(--portal-accent-tint);
+  color: var(--portal-accent-solid);
+}
+
+.method-card-pill.is-quiz {
+  background: var(--portal-brand-green-soft);
+  color: var(--portal-brand-green-text);
+}
+
+.method-card-title {
+  margin: 0 0 0.6rem;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--portal-text);
+}
+
+.method-card-subtitle {
+  margin: 0 0 1.2rem;
+  font-size: 13px;
+  color: var(--portal-text-muted);
+  line-height: 1.55;
+}
+
+.method-card-bullets {
+  list-style: none;
+  margin: 0 0 1.6rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.method-card-bullets li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 13px;
+  color: var(--portal-text);
+}
+
+.method-card-bullets svg { color: var(--portal-brand-green-text); }
+
+.method-card-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.4rem;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  width: fit-content;
+  min-width: 160px;
+}
+
+.method-card-cta.is-strategist {
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  box-shadow: 0 4px 14px rgba(85, 64, 255, 0.28);
+}
+
+.method-card-cta.is-quiz {
+  background: linear-gradient(135deg, var(--portal-brand-purple) 0%, var(--portal-brand-pink) 100%);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
+}
+
+/* =========================================================
+   AI Strategist — chat shell
+   ========================================================= */
+
+.strategist-page { padding-bottom: 3rem; }
+.strategist-page-error {
+  background: rgba(232,77,77,0.1);
+  border: 1px solid rgba(232,77,77,0.3);
+  color: var(--portal-danger);
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  margin: 0 0 1rem;
+  font-size: 13px;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Strategist layout is a transparent grid container: sidebar and chat
+   are each their own card with visible spacing between them. The
+   container is centered with a max-width so the whole thing reads as
+   a clean two-pane unit on wide screens. */
+.strategist-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 1.4rem;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  align-items: flex-start;
+  min-height: 560px;
+}
+
+/* Chat-only mode (AI Manager full-page): the sidebar card is gone, the
+   chat card expands to the full max-width. */
+.strategist-shell.is-chat-only { grid-template-columns: minmax(0, 1fr); }
+
+@media (max-width: 920px) {
+  .strategist-shell { grid-template-columns: minmax(0, 1fr); }
+}
+
+.strategist-chat-reset {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--portal-border);
+  color: var(--portal-text-muted);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.strategist-chat-reset:hover:not(:disabled) {
+  color: var(--portal-text);
+  border-color: var(--portal-border-strong);
+}
+
+.strategist-chat-reset:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Sidebar card. Standalone surface separated from the chat by the
+   shell's gap, not by an internal border. */
+.strategist-side {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 18px;
+  box-shadow: var(--portal-shadow-sm);
+  padding: 1.4rem 1.2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 1.2rem;
+}
+
+.strategist-side-persona {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.strategist-side-persona strong {
+  display: block;
+  font-size: 14px;
+  color: var(--portal-text);
+  font-weight: 700;
+}
+
+.strategist-side-persona span {
+  font-size: 11px;
+  color: var(--portal-text-muted);
+}
+
+.strategist-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--portal-brand-navy) 0%, var(--portal-brand-blue) 100%);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.strategist-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.strategist-side-divider {
+  border: 0;
+  border-top: 1px solid var(--portal-border);
+  margin: 1rem 0 0.8rem;
+}
+
+.strategist-side-section { flex: 1; }
+
+.strategist-side-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--portal-text-muted);
+  margin-bottom: 0.7rem;
+}
+
+.strategist-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.strategist-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--portal-text-muted);
+}
+
+.strategist-checklist-item.is-active {
+  background: var(--portal-accent-tint);
+  color: var(--portal-accent-solid);
+  font-weight: 600;
+}
+
+.strategist-checklist-item.is-done { color: var(--portal-brand-green-text); }
+
+.strategist-checklist-marker {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--portal-text-muted);
+  flex-shrink: 0;
+}
+
+.strategist-checklist-item.is-active .strategist-checklist-marker {
+  background: var(--portal-accent-solid);
+  color: #fff;
+  border-color: var(--portal-accent-solid);
+}
+
+.strategist-checklist-item.is-done .strategist-checklist-marker {
+  background: var(--portal-brand-green-text);
+  color: #fff;
+  border-color: var(--portal-brand-green-text);
+}
+
+.strategist-side-reset {
+  margin-top: 1rem;
+  background: transparent;
+  border: 1px dashed var(--portal-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  color: var(--portal-text-muted);
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.strategist-side-reset:hover:not(:disabled) { color: var(--portal-text); }
+.strategist-side-reset:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Chat panel */
+
+/* Chat card. Owns the gradient strip the shell used to render, so the
+   two cards each have their own well-defined surface. */
+.strategist-chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 18px;
+  box-shadow: var(--portal-shadow-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.strategist-chat::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #00ff89 0%, #377cc7 50%, #5540ff 100%);
+  pointer-events: none;
+}
+
+.strategist-chat-header {
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--portal-border);
+}
+
+.strategist-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.strategist-header-titlewrap { display: flex; flex-direction: column; }
+
+.strategist-header-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--portal-text);
+}
+
+.strategist-header-sub {
+  font-size: 11px;
+  color: var(--portal-text-muted);
+}
+
+.strategist-header-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: var(--portal-accent-tint);
+  color: var(--portal-accent-solid);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.strategist-header-change {
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  color: var(--portal-text);
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.strategist-chat-scroll {
+  flex: 1;
+  padding: 1.2rem 1.4rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-height: 560px;
+}
+
+.strategist-chat-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--portal-text-muted);
+  font-size: 12px;
+}
+
+.strategist-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  width: 100%;
+  min-width: 0;
+}
+
+/* User messages: align the whole row to the right so the avatar hugs
+   the chat edge and the bubble extends leftward from it. Previously
+   we used `flex-direction: row-reverse` which combined with the JSX
+   order caused the bubble to grow past the container's right edge and
+   get clipped by the shell's overflow:hidden. */
+.strategist-msg.is-user { justify-content: flex-end; }
+
+.strategist-msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--portal-brand-navy) 0%, var(--portal-brand-blue) 100%);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.strategist-msg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.strategist-msg-avatar.is-user {
+  background: var(--portal-surface-muted);
+  color: var(--portal-text);
+  border: 1px solid var(--portal-border);
+}
+
+.strategist-msg-bubble {
+  background: var(--portal-accent-soft);
+  color: var(--portal-text);
+  border-radius: 16px;
+  padding: 0.75rem 1rem;
+  font-size: 13px;
+  line-height: 1.5;
+  /* Wrap long words / URLs instead of pushing the bubble off-screen.
+     The bubble-wrap already caps the column at 70% of the row, so the
+     bubble itself just needs to fit its content within that. */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.strategist-msg.is-user .strategist-msg-bubble {
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-purple) 100%);
+  color: #fff;
+}
+
+.strategist-msg-bubble p { margin: 0 0 0.4rem; }
+.strategist-msg-bubble p:last-child { margin-bottom: 0; }
+
+.strategist-typing {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.strategist-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--portal-text-muted);
+  display: inline-block;
+  animation: strategist-bounce 1.2s infinite ease-in-out;
+}
+
+.strategist-typing span:nth-child(2) { animation-delay: 0.15s; }
+.strategist-typing span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes strategist-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+
+.strategist-spin { animation: strategist-spin 0.9s linear infinite; }
+@keyframes strategist-spin { to { transform: rotate(360deg); } }
+
+.strategist-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding-left: 2.2rem;
+}
+
+.strategist-chip {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-accent-tint);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 12px;
+  color: var(--portal-accent-solid);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.strategist-chip:hover {
+  background: var(--portal-accent-soft);
+  border-color: var(--portal-accent-solid);
+}
+
+.strategist-ready-card {
+  margin-top: 0.6rem;
+  background: var(--portal-brand-green-soft);
+  border: 1px solid rgba(10, 141, 86, 0.3);
+  border-radius: 12px;
+  padding: 0.95rem 1.1rem;
+}
+
+.strategist-ready-card strong { display: block; color: var(--portal-text); font-size: 14px; }
+.strategist-ready-card p { margin: 0.2rem 0 0.8rem; font-size: 12px; color: var(--portal-text-muted); }
+
+.strategist-ready-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(85, 64, 255, 0.25);
+}
+
+.strategist-ready-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.strategist-error {
+  font-size: 12px;
+  color: var(--portal-danger);
+  background: rgba(232,77,77,0.08);
+  border: 1px solid rgba(232,77,77,0.25);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+}
+
+/* Composer */
+
+/* Composer is its own pill-shaped surface inside the chat card. The
+   input fills the pill and the action icons / send button sit inline. */
+.strategist-composer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.9rem 1.2rem 1.2rem;
+  padding: 0.5rem 0.55rem 0.5rem 1rem;
+  border: 1px solid var(--portal-border);
+  background: var(--portal-card-bg);
+  border-radius: 999px;
+  box-shadow: var(--portal-shadow-sm);
+}
+
+.strategist-composer-input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 0.4rem 0;
+  font-size: 13px;
+  color: var(--portal-text);
+  outline: none;
+}
+
+.strategist-composer-input:disabled { opacity: 0.6; }
+
+.strategist-composer-icon {
+  background: transparent;
+  border: 0;
+  color: var(--portal-text-muted);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.strategist-composer-icon img,
+.strategist-composer-icon svg { width: 16px; height: 16px; display: block; }
+
+.strategist-composer-icon:hover:not(:disabled) {
+  background: var(--portal-surface-muted);
+  color: var(--portal-text);
+}
+
+.strategist-composer-icon:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.strategist-composer-send {
+  background: linear-gradient(135deg, var(--portal-brand-green) 0%, var(--portal-accent-solid) 100%);
+  color: #fff;
+  border: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(85, 64, 255, 0.25);
+}
+
+.strategist-composer-send img,
+.strategist-composer-send svg { width: 24px; height: 24px; display: block; }
+
+.strategist-composer-send:disabled {
+  background: var(--portal-surface-muted);
+  color: var(--portal-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* =========================================================
+   Logo Design — Guided Quiz
+   ========================================================= */
+
+.quiz-page { padding-bottom: 4rem; }
+
+.quiz-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+
+.quiz-header {
+  text-align: center;
+  margin: 1rem auto 1.4rem;
+  max-width: 720px;
+}
+
+.quiz-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--portal-text);
+}
+
+.quiz-header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--portal-text-muted);
+  line-height: 1.5;
+}
+
+.quiz-progress {
+  max-width: 720px;
+  margin: 0 auto 1.6rem;
+  text-align: center;
+}
+
+.quiz-progress-text {
+  font-size: 13px;
+  color: var(--portal-text-muted);
+  margin-bottom: 0.6rem;
+}
+
+.quiz-progress-text strong { color: var(--portal-text); font-weight: 700; }
+
+.quiz-progress-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--portal-border);
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  transition: width 0.3s ease;
+}
+
+.quiz-card {
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 18px;
+  padding: 2.2rem 2.2rem 1.8rem;
+  position: relative;
+  box-shadow: var(--portal-shadow-sm);
+}
+
+.quiz-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--portal-accent-solid) 0%, var(--portal-brand-blue) 50%, var(--portal-brand-pink) 100%);
+  border-radius: 0 0 18px 18px;
+}
+
+.quiz-loading {
+  text-align: center;
+  color: var(--portal-text-muted);
+  font-size: 13px;
+  padding: 2rem 0;
+}
+
+.quiz-error {
+  background: rgba(232,77,77,0.1);
+  border: 1px solid rgba(232,77,77,0.3);
+  color: var(--portal-danger);
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  margin: 0 auto 1rem;
+  max-width: 720px;
+  font-size: 13px;
+}
+
+.quiz-q {
+  margin: 0 0 0.4rem;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--portal-text);
+  text-align: center;
+}
+
+.quiz-q-accent { color: var(--portal-accent-solid); }
+
+.quiz-q-sub {
+  margin: 0 0 1.6rem;
+  font-size: 13px;
+  color: var(--portal-text-muted);
+  text-align: center;
+}
+
+.quiz-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--portal-text);
+  margin: 0.7rem 0 0.35rem;
+}
+
+.quiz-label-muted { font-weight: 400; color: var(--portal-text-muted); }
+
+.quiz-input,
+.quiz-textarea {
+  width: 100%;
+  border: 1px solid var(--portal-border);
+  background: var(--portal-card-bg);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 13px;
+  color: var(--portal-text);
+  outline: none;
+  resize: vertical;
+}
+
+.quiz-input:focus,
+.quiz-textarea:focus { border-color: var(--portal-accent-solid); }
+
+.quiz-textarea-wrap { position: relative; }
+.quiz-textarea-count {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 10px;
+  color: var(--portal-text-muted);
+}
+
+.quiz-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.quiz-chip {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-size: 12px;
+  color: var(--portal-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.quiz-chip.is-selected {
+  background: var(--portal-brand-green-soft);
+  border-color: var(--portal-brand-green);
+  color: var(--portal-brand-green-text);
+  font-weight: 600;
+}
+
+.quiz-chip-icon { font-size: 14px; line-height: 1; }
+
+.quiz-style-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+@media (max-width: 720px) {
+  .quiz-style-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+.quiz-style-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 0.9rem;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  min-height: 80px;
+}
+
+.quiz-style-card.is-selected {
+  background: var(--portal-brand-green-soft);
+  border-color: var(--portal-brand-green);
+}
+
+.quiz-style-radio {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--portal-border-strong);
+  background: var(--portal-card-bg);
+}
+
+.quiz-style-card.is-selected .quiz-style-radio {
+  background: var(--portal-brand-green-text);
+  border-color: var(--portal-brand-green-text);
+  box-shadow: 0 0 0 2px rgba(10, 141, 86, 0.25);
+}
+
+.quiz-style-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.quiz-style-text strong { font-size: 14px; color: var(--portal-text); font-weight: 700; }
+.quiz-style-text span { font-size: 11px; color: var(--portal-text-muted); line-height: 1.35; }
+
+.quiz-style-thumb {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--portal-border);
+  flex-shrink: 0;
+}
+
+.quiz-style-thumb img { width: 86%; height: 86%; object-fit: contain; }
+
+.quiz-typo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+@media (max-width: 720px) {
+  .quiz-typo-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+.quiz-typo-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  padding: 0.95rem 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  color: var(--portal-text);
+}
+
+.quiz-typo-card.is-selected {
+  background: var(--portal-brand-green-soft);
+  border-color: var(--portal-brand-green);
+}
+
+.quiz-typo-radio {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--portal-border-strong);
+  background: var(--portal-card-bg);
+}
+
+.quiz-typo-card.is-selected .quiz-typo-radio {
+  background: var(--portal-brand-green-text);
+  border-color: var(--portal-brand-green-text);
+}
+
+.quiz-typo-sample { font-size: 24px; line-height: 1.15; }
+.quiz-typo-card strong { font-size: 14px; font-weight: 700; }
+.quiz-typo-blurb { font-size: 11px; color: var(--portal-text-muted); line-height: 1.35; }
+
+.quiz-input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.quiz-attach-btn {
+  background: transparent;
+  border: 1px solid var(--portal-border);
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--portal-text-muted);
+}
+
+.quiz-attach-btn:hover:not(:disabled) {
+  color: var(--portal-text);
+  border-color: var(--portal-border-strong);
+}
+
+.quiz-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1.6rem;
+}
+
+.quiz-back {
+  background: transparent;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-size: 13px;
+  color: var(--portal-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.quiz-next {
+  background: var(--portal-accent-tint);
+  color: rgba(85, 64, 255, 0.55);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1.5rem;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: not-allowed;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.quiz-next.is-ready {
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(85, 64, 255, 0.28);
+}
+
+.quiz-next:disabled { opacity: 0.6; }
+
+/* =========================================================
+   Logo result page — Schedule a meeting card
+   ========================================================= */
+
+.logo-meeting-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  margin-top: 0.8rem;
+}
+
+.logo-meeting-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--portal-text);
+}
+
+.logo-meeting-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--portal-text-muted);
+  max-width: 480px;
+  line-height: 1.45;
+}
+
+.logo-meeting-btn {
+  background: #1a1f3a;
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1.2rem;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.logo-meeting-btn:hover { background: #2c3458; }
+
+/* =========================================================
+   Global Strategist Dock (floating dashboard-wide assistant)
+   ========================================================= */
+
+.strategist-dock-launcher {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1.1rem;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(85, 64, 255, 0.35);
+  cursor: pointer;
+}
+
+.strategist-dock-launcher:hover { transform: translateY(-1px); }
+
+.strategist-dock {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 40px);
+}
+
+.strategist-dock.is-minimised { max-height: 56px; }
+
+.strategist-dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.9rem;
+  background: linear-gradient(135deg, #1a1f3a 0%, #2c3458 100%);
+  color: #fff;
+}
+
+.strategist-dock-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.strategist-dock-title strong { font-size: 13px; font-weight: 700; display: block; }
+.strategist-dock-title span { font-size: 10px; opacity: 0.7; }
+
+.strategist-dock-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.strategist-dock-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.strategist-dock-actions button {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.strategist-dock-actions button:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+
+.strategist-dock-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* When embedded in the dock, the AIStrategist drops its sidebar and
+   collapses to chat-only. */
+.strategist-dock-body .strategist-shell {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  flex: 1;
+}
+
+.strategist-dock-body .strategist-shell::after { display: none; }
+.strategist-dock-body .strategist-side { display: none; }
+.strategist-dock-body .strategist-chat { min-height: 0; max-height: 520px; }
+.strategist-dock-body .strategist-chat-scroll { max-height: 400px; }
+.strategist-dock-body .strategist-chat-header { display: none; }
+
+/* Manual "Generate now" override in the sidebar. Sits under the
+   checklist; greyed out until the brief has the required fields. */
+.strategist-side-generate {
+  margin-top: 0.6rem;
+  background: var(--portal-surface-muted);
+  color: var(--portal-text-muted);
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  padding: 0.5rem 0.8rem;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: not-allowed;
+  width: fit-content;
+}
+
+.strategist-side-generate.is-ready {
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  border-color: transparent;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(85, 64, 255, 0.25);
+}
+
+.strategist-side-generate.is-ready:hover { filter: brightness(1.05); }
+.strategist-side-generate:disabled { opacity: 0.7; }
+
+/* =========================================================
+   AI Manager — full-page assistant
+   ========================================================= */
+
+.ai-manager-page { padding-bottom: 3rem; }
+
+/* Top strip: page title on the left, Start over button on the right.
+   Sits above the chat shell so the reset is always reachable without
+   scrolling. */
+.ai-manager-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.ai-manager-topbar h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--portal-text);
+}
+
+.ai-manager-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--portal-text-muted);
+  cursor: pointer;
+}
+
+.ai-manager-reset:hover {
+  color: var(--portal-text);
+  border-color: var(--portal-border-strong);
+}
+
+/* Manual route suggestion card. Replaces the old auto-navigate banner:
+   when the LLM emits a `route`, the user picks whether to follow it. */
+.ai-manager-route-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(79,70,229,0.08);
+  border: 1px solid rgba(79,70,229,0.28);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.ai-manager-route-card strong {
+  display: block;
+  font-size: 13px;
+  color: var(--portal-text);
+}
+
+.ai-manager-route-card p {
+  margin: 0.2rem 0 0;
+  font-size: 12px;
+  color: var(--portal-text-muted);
+}
+
+.ai-manager-route-card code {
+  background: var(--portal-accent-tint);
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--portal-accent-solid);
+}
+
+.ai-manager-route-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ai-manager-route-accept {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-manager-route-dismiss {
+  background: transparent;
+  border: 1px solid var(--portal-border);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: var(--portal-text-muted);
+  cursor: pointer;
+}
+
+.ai-manager-route-dismiss:hover {
+  color: var(--portal-text);
+  border-color: var(--portal-border-strong);
+}
+
+/* Inline attachments (e.g. generated logo concept grid) rendered under
+   an assistant bubble. Sit inside the bubble-wrap so they line up with
+   the avatar column. */
+.strategist-msg-bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* Cap the column at 70% of the message row but allow it to shrink to
+     fit shorter content. min-width: 0 lets flex children honour the
+     constraint instead of expanding to intrinsic content size. */
+  max-width: 70%;
+  min-width: 0;
+}
+
+.strategist-msg.is-user .strategist-msg-bubble-wrap { align-items: flex-end; }
+
+.strategist-attachment {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  padding: 0.7rem 0.8rem 0.8rem;
+  width: 100%;
+}
+
+.strategist-attachment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.strategist-attachment-header strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--portal-text);
+}
+
+.strategist-attachment-header span {
+  font-size: 11px;
+  color: var(--portal-text-muted);
+}
+
+.strategist-attachment-grid {
+  display: grid;
+  gap: 0.4rem;
+}
+
+/* 1-2 images: keep them roomy. 3+ images: tighten to a 4-up row of
+   small thumbs so the chat bubble doesn't dominate the page. Either
+   way, tap a tile to open the full-screen preview overlay. */
+.strategist-attachment-grid.is-roomy {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.strategist-attachment-grid.is-compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 360px;
+}
+
+.strategist-attachment-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--portal-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  padding: 0;
+  cursor: pointer;
+}
+
+.strategist-attachment-tile:hover {
+  border-color: var(--portal-accent-solid);
+}
+
+.strategist-attachment-tile img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  padding: 4px;
+  background: #fff;
+}
+
+.strategist-attachment-grid.is-compact .strategist-attachment-tile img {
+  padding: 3px;
+}
+
+.strategist-attachment-tile-zoom {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.55);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.strategist-attachment-tile:hover .strategist-attachment-tile-zoom { opacity: 1; }
+
+.strategist-attachment-caption {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--portal-text-muted);
+  padding: 0.2rem 0.4rem 0.3rem;
+  background: var(--portal-surface-muted);
+  text-align: center;
+}
+
+.strategist-attachment-grid.is-compact .strategist-attachment-caption {
+  font-size: 9px;
+  padding: 0.18rem 0.35rem 0.25rem;
+}
+
+/* When the AI Manager hosts the strategist, give it a taller chat area
+   since it's the only thing on the page. */
+.ai-manager-page .strategist-chat,
+.ai-manager-page .strategist-shell { min-height: 740px; max-height: 740px; }
+.ai-manager-page .strategist-chat-scroll { max-height: 640px; }
+
+/* =========================================================
+   Credits badge (header)
+   ========================================================= */
+
+.credits-badge-wrap { position: relative; display: inline-flex; }
+
+.credits-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--portal-surface-muted);
+  border: 1px solid var(--portal-border);
+  color: var(--portal-text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.credits-badge:hover { border-color: var(--portal-border-strong); }
+.credits-badge small {
+  font-size: 9px;
+  font-weight: 600;
+  margin-left: 2px;
+  opacity: 0.65;
+  text-transform: uppercase;
+}
+
+.credits-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: 280px;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  box-shadow: var(--portal-shadow-md);
+  padding: 0.9rem;
+}
+
+.credits-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+  font-size: 12px;
+  color: var(--portal-text);
+}
+
+.credits-popover-header span { color: var(--portal-text-muted); font-size: 11px; }
+
+.credits-popover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.credits-popover-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--portal-text-muted);
+}
+
+.credits-popover-list li strong { color: var(--portal-text); }
+
+.credits-popover hr {
+  border: 0;
+  border-top: 1px solid var(--portal-border);
+  margin: 0.7rem 0;
+}
+
+.credits-popover-bykind {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.credits-popover-bykind > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--portal-text-muted);
+  text-transform: capitalize;
+}
+
+.credits-popover-bykind strong { color: var(--portal-text); }
+
+/* Sidebar nav "New" badge tone for the AI Manager item. */
+.portal-nav-badge.badge-accent {
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 0 0.45rem;
+  border-radius: 999px;
 }

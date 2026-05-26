@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Sidebar } from "../../components/Sidebar";
 import { Header } from "../../components/header";
+import GlobalStrategistDock from "../../components/strategist/GlobalStrategistDock";
 import { apiServices } from "../../services/apiServices";
 
 export function AuthenticatedLayout({ children }) {
@@ -43,6 +44,7 @@ export function AuthenticatedLayout({ children }) {
         <Header />
         <main className="portal-main-content">{children}</main>
       </div>
+      <GlobalStrategistDock />
     </div>
   );
 }

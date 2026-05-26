@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   Check,
   ChevronLeft,
   ChevronRight,
-  Download,
   ImageOff,
-  Maximize2,
   X,
 } from "lucide-react";
 import SafeImage from "../../components/ui/SafeImage";
 import { apiServices } from "../../services/apiServices";
+
+// Brand SVG icons for the per-concept action buttons (download + expand).
+import outputDownloadIcon from "../../assets/branding/logo/assets/Output_Download.svg";
+import outputExpandIcon from "../../assets/branding/logo/assets/Output_Expand.svg";
 
 // -------- Lookups --------
 
@@ -150,17 +153,17 @@ function ConceptCard({
             onError={() => onError(index)}
           />
         )}
-        {/* Hover overlay surfaces a clearer "click to preview" cue */}
+        {/* Invisible click target: clicking the image opens the full
+            preview overlay. No hover overlay or icon, the cue is just
+            the cursor change. The action buttons in the footer remain
+            for explicit Preview / Download intents. */}
         {!broken ? (
           <button
             type="button"
             className="logo-concept-hover"
             onClick={(e) => { e.stopPropagation(); onPreview(index); }}
             aria-label={`Open larger preview of concept ${index + 1}`}
-          >
-            <Maximize2 size={18} />
-            <span>Preview</span>
-          </button>
+          />
         ) : null}
       </div>
       <div className="logo-concept-footer">
@@ -173,7 +176,7 @@ function ConceptCard({
             aria-label={`Preview concept ${index + 1}`}
             title="Preview"
           >
-            <Maximize2 size={13} />
+            <img src={outputExpandIcon} alt="" />
           </button>
           <button
             type="button"
@@ -183,7 +186,7 @@ function ConceptCard({
             aria-label={`Download concept ${index + 1}`}
             title="Download"
           >
-            <Download size={13} />
+            <img src={outputDownloadIcon} alt="" />
           </button>
         </div>
       </div>
@@ -214,6 +217,7 @@ export default function LogoDesignView({
   status, statusLabel,
   onRegenerate,
 }) {
+  const navigate = useNavigate();
   const usable = (Array.isArray(images) ? images : []).filter(isUsable);
   const [selectedConcept, setSelectedConcept] = useState(0);
   const [downloadingIndex, setDownloadingIndex] = useState(-1);
@@ -404,7 +408,7 @@ export default function LogoDesignView({
               <h2 className="logo-concepts-title">Logo Concepts</h2>
               <p className="logo-concepts-sub">
                 Select your favorite to refine it with your AOG strategist. You can download any
-                concept at any time.
+                concept at any time
               </p>
             </div>
             {onRegenerate ? (
@@ -456,7 +460,7 @@ export default function LogoDesignView({
 
           <section className="logo-revision-card">
             <div>
-              <h3>Ready to refine Concept {selectedConcept + 1}?</h3>
+              <h3>Ready to refine any Concept?</h3>
               <p>
                 Your AOG strategist will review your selection and adjust the final concept.
               </p>
@@ -474,6 +478,23 @@ export default function LogoDesignView({
                 Request revision →
               </button>
             )}
+          </section>
+
+          <section className="logo-meeting-card">
+            <div>
+              <h3>Still not seeing the right direction?</h3>
+              <p>
+                Book a quick meeting with an AOG strategist and we&apos;ll help you clarify the
+                concept, style, and next revision.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="logo-meeting-btn"
+              onClick={() => navigate("/support")}
+            >
+              Schedule a meeting →
+            </button>
           </section>
 
           {prompt ? (
