@@ -15,6 +15,11 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Hide the Google CTA when the backend reports OAuth isn't configured.
+  // Previously the button was always shown and clicking produced a 503,
+  // which is what an end-user reported as "an error".
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [providerCheckDone, setProviderCheckDone] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("accessToken");
@@ -27,6 +32,21 @@ const LoginForm = () => {
       navigate("/home", { replace: true });
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
+    if (!API_URL) { setProviderCheckDone(true); return; }
+    let cancelled = false;
+    fetch(`${API_URL}/authentication/status`, { credentials: "omit" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (cancelled) return;
+        setGoogleEnabled(Boolean(data?.providers?.google));
+      })
+      .catch(() => { /* keep button hidden on network failure */ })
+      .finally(() => { if (!cancelled) setProviderCheckDone(true); });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -61,7 +81,10 @@ const LoginForm = () => {
 
   const handleGoogleRedirect = () => {
     const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
-    window.location.href = `${API_URL}/authentication/google`;
+    // mode=login tells the backend callback to refuse new emails (we send
+    // them to a "no account, sign up?" screen instead of silently
+    // creating an account).
+    window.location.href = `${API_URL}/authentication/google?mode=login`;
   };
 
   return (
@@ -69,21 +92,29 @@ const LoginForm = () => {
       <div className="auth-form-wrapper">
         <h1 className="auth-title">Sign in</h1>
 
-        <button
-          type="button"
-          className="auth-google-btn"
-          onClick={handleGoogleRedirect}
-          disabled={loading}
-        >
-          <img
-            src={authAppearance.icons.google}
-            alt="Google"
-            className="auth-google-icon"
-          />
-          <span>Continue with Google</span>
-        </button>
+        {/* Only render the Google CTA if the backend confirmed OAuth is
+            configured. While we're still checking (providerCheckDone =
+            false), render nothing so we don't flash a button that's
+            about to vanish. */}
+        {providerCheckDone && googleEnabled ? (
+          <>
+            <button
+              type="button"
+              className="auth-google-btn"
+              onClick={handleGoogleRedirect}
+              disabled={loading}
+            >
+              <img
+                src={authAppearance.icons.google}
+                alt="Google"
+                className="auth-google-icon"
+              />
+              <span>Continue with Google</span>
+            </button>
 
-        <div className="auth-separator">or</div>
+            <div className="auth-separator">or</div>
+          </>
+        ) : null}
 
         <form className="auth-form-wrapper" onSubmit={handleSubmit}>
           {error ? <p className="auth-error">{error}</p> : null}

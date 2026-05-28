@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   Check,
@@ -105,7 +104,7 @@ async function downloadViaPresign(url, filename) {
 
 // -------- Subcomponents --------
 
-function SidebarCard({ label, children }) {
+function SidebarCard({ label = "", children }) {
   return (
     <section className="logo-result-side-card">
       {label ? <span className="logo-result-side-card-label">{label}</span> : null}
@@ -117,14 +116,13 @@ SidebarCard.propTypes = {
   label: PropTypes.string,
   children: PropTypes.node.isRequired,
 };
-SidebarCard.defaultProps = { label: "" };
 
 function ConceptCard({
   img,
   index,
-  selected,
-  broken,
-  downloading,
+  selected = false,
+  broken = false,
+  downloading = false,
   onSelect,
   onPreview,
   onDownload,
@@ -204,27 +202,33 @@ ConceptCard.propTypes = {
   onDownload: PropTypes.func.isRequired,
   onError: PropTypes.func.isRequired,
 };
-ConceptCard.defaultProps = { selected: false, broken: false, downloading: false };
 
 // -------- Main view --------
 
 export default function LogoDesignView({
   // existing
-  images, prompt, brandName, model, seed, errors, requested,
+  images = [], prompt = "", brandName = "", model = "", seed = null, errors,
+  requested,
   // new — needed for the redesigned layout
-  tagline, businessDescription, logoStyle,
-  selectedColors, customColors, typography,
-  status, statusLabel,
+  tagline = "", businessDescription = "", logoStyle = "",
+  selectedColors = [], customColors = [], typography = [],
+  status = "", statusLabel = "",
   onRegenerate,
+  projectId = null,
 }) {
-  const navigate = useNavigate();
   const usable = (Array.isArray(images) ? images : []).filter(isUsable);
   const [selectedConcept, setSelectedConcept] = useState(0);
   const [downloadingIndex, setDownloadingIndex] = useState(-1);
   const [downloadError, setDownloadError] = useState("");
   const [brokenIndices, setBrokenIndices] = useState(() => new Set());
   const [previewIndex, setPreviewIndex] = useState(-1);
+  // Revision form state. The button now opens an inline notes box
+  // instead of firing a fake toast; submitting POSTs to /api/revisions.
+  const [revisionOpen, setRevisionOpen] = useState(false);
+  const [revisionNotes, setRevisionNotes] = useState("");
+  const [revisionSubmitting, setRevisionSubmitting] = useState(false);
   const [revisionSent, setRevisionSent] = useState(false);
+  const [revisionError, setRevisionError] = useState("");
 
   useEffect(() => {
     // Keep selection valid when image set changes.
@@ -311,9 +315,42 @@ export default function LogoDesignView({
     }
   };
 
-  const handleRequestRevision = () => {
-    setRevisionSent(true);
-    setTimeout(() => setRevisionSent(false), 3500);
+  // Open the inline revision form. Submitting POSTs to /api/revisions
+  // so the AOG strategist actually receives the feedback (previously
+  // this button just fired a fake toast that the end user described
+  // as "nothing happens").
+  const handleOpenRevision = () => {
+    setRevisionOpen(true);
+    setRevisionSent(false);
+    setRevisionError("");
+  };
+
+  const handleSubmitRevision = async () => {
+    if (revisionSubmitting) return;
+    const notes = revisionNotes.trim();
+    if (!notes) {
+      setRevisionError("Please tell us what to change.");
+      return;
+    }
+    setRevisionSubmitting(true);
+    setRevisionError("");
+    try {
+      const res = await apiServices.create_revision({
+        project_id: projectId || null,
+        service_type: "logo_design",
+        concept_index: selectedConcept,
+        notes,
+      });
+      if (!res?.success) throw new Error(res?.message || "Could not submit revision.");
+      setRevisionSent(true);
+      setRevisionNotes("");
+      setRevisionOpen(false);
+      setTimeout(() => setRevisionSent(false), 5000);
+    } catch (err) {
+      setRevisionError(err?.message || "Could not submit. Try again?");
+    } finally {
+      setRevisionSubmitting(false);
+    }
   };
 
   // Nothing to show if the model returned no usable images.
@@ -473,12 +510,51 @@ export default function LogoDesignView({
               <button
                 type="button"
                 className="logo-revision-btn"
-                onClick={handleRequestRevision}
+                onClick={handleOpenRevision}
               >
                 Request revision →
               </button>
             )}
           </section>
+
+          {revisionOpen ? (
+            <section className="logo-revision-form">
+              <label htmlFor="logo-revision-notes">
+                What should we change about <strong>Concept {selectedConcept + 1}</strong>?
+              </label>
+              <textarea
+                id="logo-revision-notes"
+                rows={4}
+                placeholder="e.g. Keep concept 2 but use burgundy instead of red, and try a serif typeface."
+                value={revisionNotes}
+                onChange={(e) => setRevisionNotes(e.target.value)}
+                disabled={revisionSubmitting}
+              />
+              {revisionError ? (
+                <div className="logo-revision-form-error">
+                  <AlertTriangle size={13} /> {revisionError}
+                </div>
+              ) : null}
+              <div className="logo-revision-form-actions">
+                <button
+                  type="button"
+                  className="logo-revision-form-cancel"
+                  onClick={() => { setRevisionOpen(false); setRevisionError(""); }}
+                  disabled={revisionSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="logo-revision-form-submit"
+                  onClick={handleSubmitRevision}
+                  disabled={revisionSubmitting || !revisionNotes.trim()}
+                >
+                  {revisionSubmitting ? "Sending..." : "Send to my strategist"}
+                </button>
+              </div>
+            </section>
+          ) : null}
 
           <section className="logo-meeting-card">
             <div>
@@ -488,13 +564,16 @@ export default function LogoDesignView({
                 concept, style, and next revision.
               </p>
             </div>
-            <button
-              type="button"
+            <a
               className="logo-meeting-btn"
-              onClick={() => navigate("/support")}
+              href={`mailto:info@artofgalaxy.com?subject=${encodeURIComponent(
+                `Logo design meeting request: ${brandName || "my brand"}`
+              )}&body=${encodeURIComponent(
+                `Hi AOG team,\n\nI just generated logo concepts for "${brandName || "(unnamed brand)"}" and I'd love to book a quick meeting to discuss the next revision.\n\nThanks!`
+              )}`}
             >
               Schedule a meeting →
-            </button>
+            </a>
           </section>
 
           {prompt ? (
@@ -600,23 +679,6 @@ LogoDesignView.propTypes = {
   status: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   statusLabel: PropTypes.string,
   onRegenerate: PropTypes.func,
+  projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
-LogoDesignView.defaultProps = {
-  images: [],
-  prompt: "",
-  brandName: "",
-  model: "",
-  seed: null,
-  errors: undefined,
-  requested: undefined,
-  tagline: "",
-  businessDescription: "",
-  logoStyle: "",
-  selectedColors: [],
-  customColors: [],
-  typography: [],
-  status: "",
-  statusLabel: "",
-  onRegenerate: undefined,
-};

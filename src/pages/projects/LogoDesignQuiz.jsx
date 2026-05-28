@@ -211,6 +211,7 @@ export default function LogoDesignQuiz() {
           customColors={brief.custom_colors}
           typography={brief.selected_typography}
           statusLabel="Done"
+          projectId={result.project_id}
         />
       </div>
     );
@@ -529,7 +530,7 @@ function StepFinal({ brief, onUpdate }) {
   );
 }
 
-function ProgressBar({ step, total, label }) {
+function ProgressBar({ step, total, label = "" }) {
   const pct = Math.round((step / total) * 100);
   return (
     <div className="quiz-progress">
@@ -556,4 +557,3 @@ ProgressBar.propTypes = {
   total: PropTypes.number.isRequired,
   label: PropTypes.string,
 };
-ProgressBar.defaultProps = { label: "" };

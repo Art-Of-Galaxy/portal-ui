@@ -380,6 +380,15 @@ html.portal-theme-dark {
   background: #d7d9ff;
   color: #2a1fbf;
   font-weight: 700;
+  /* Clip the inner <img> (width:100%/height:100%) to the round button
+     border. Without overflow:hidden the image renders square and pokes
+     out of the circle. */
+  overflow: hidden;
+  padding: 0;
+}
+
+.portal-icon-btn.is-avatar img {
+  border-radius: 50%;
 }
 
 .portal-header-divider {
@@ -4131,6 +4140,83 @@ html.portal-theme-dark {
   color: var(--portal-success);
 }
 
+/* Inline revision-notes form. Opens under the Request revision CTA
+   after the user clicks; submission posts to /api/revisions. */
+.logo-revision-form {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-accent-tint);
+  border-radius: 14px;
+  padding: 1rem 1.1rem 1.1rem;
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.logo-revision-form label {
+  font-size: 13px;
+  color: var(--portal-text);
+}
+
+.logo-revision-form textarea {
+  width: 100%;
+  border: 1px solid var(--portal-border);
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  font-size: 13px;
+  color: var(--portal-text);
+  background: var(--portal-card-bg);
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.logo-revision-form textarea:focus { border-color: var(--portal-accent-solid); }
+
+.logo-revision-form-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 12px;
+  color: var(--portal-danger);
+}
+
+.logo-revision-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.logo-revision-form-cancel {
+  background: transparent;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--portal-text-muted);
+  cursor: pointer;
+}
+
+.logo-revision-form-submit {
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(85, 64, 255, 0.25);
+}
+
+.logo-revision-form-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 /* Prompt accordion */
 .logo-prompt-accordion {
   background: var(--portal-card-bg);
@@ -4908,7 +4994,7 @@ html.portal-theme-dark {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 4px;
+  height: 10px;
   background: linear-gradient(90deg, #00ff89 0%, #377cc7 50%, #5540ff 100%);
   pointer-events: none;
 }
@@ -5094,6 +5180,37 @@ html.portal-theme-dark {
 .strategist-chip:hover {
   background: var(--portal-accent-soft);
   border-color: var(--portal-accent-solid);
+}
+
+/* Multi-select mode: chips behave like checkboxes (toggle), and a
+   submit button appears below them. Picked chips switch to a filled
+   purple state with a checkmark. */
+.strategist-chips.is-multi .strategist-chip.is-picked {
+  background: var(--portal-accent-solid);
+  border-color: var(--portal-accent-solid);
+  color: #fff;
+}
+
+.strategist-chip-tick { margin-right: 2px; }
+
+.strategist-chip-submit {
+  margin-left: 0.3rem;
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(85, 64, 255, 0.22);
+}
+
+.strategist-chip-submit:disabled {
+  background: var(--portal-surface-muted);
+  color: var(--portal-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .strategist-ready-card {
@@ -5607,7 +5724,9 @@ html.portal-theme-dark {
 }
 
 .logo-meeting-btn {
-  background: #1a1f3a;
+  display: inline-flex;
+  align-items: center;
+  background: var(--portal-brand-navy);
   color: #fff;
   border: 0;
   border-radius: 999px;
@@ -5616,9 +5735,10 @@ html.portal-theme-dark {
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
+  text-decoration: none;
 }
 
-.logo-meeting-btn:hover { background: #2c3458; }
+.logo-meeting-btn:hover { background: #2c3458; color: #fff; }
 
 /* =========================================================
    Global Strategist Dock (floating dashboard-wide assistant)

@@ -203,6 +203,16 @@ export const apiServices = {
         headers: { 'Content-Type': 'application/json' },
     }),
 
+    // ---------- Revision requests on generated deliverables ----------
+    create_revision: async ({ project_id, service_type, concept_index, notes }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('revisions', {
+            method: 'POST',
+            body: { project_id, service_type, concept_index, notes, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+
     // ---------- Usage / credits ----------
     usage_summary: async ({ sinceDays = 30 } = {}) => {
         const userEmail = localStorage.getItem('user_email') || undefined;

@@ -219,9 +219,26 @@ export default function OnboardingFlow() {
           </select>
           <select className="onboard-input" value={business.industry} onChange={(e) => updateBusiness("industry", e.target.value)}>
             <option value="">Industry/Market Segment</option>
-            <option value="Technology">Technology</option>
-            <option value="Retail">Retail</option>
+            <option value="Beauty">Beauty</option>
             <option value="Education">Education</option>
+            <option value="Fashion & Apparel">Fashion &amp; Apparel</option>
+            <option value="Finance">Finance</option>
+            <option value="Fitness">Fitness</option>
+            <option value="Food & Beverage">Food &amp; Beverage</option>
+            <option value="Gastronomy">Gastronomy</option>
+            <option value="Health">Health</option>
+            <option value="Home & Lifestyle">Home &amp; Lifestyle</option>
+            <option value="Hospitality / Hotels">Hospitality / Hotels</option>
+            <option value="Manufacturing">Manufacturing</option>
+            <option value="Media & Entertainment">Media &amp; Entertainment</option>
+            <option value="Non-profit">Non-profit</option>
+            <option value="Professional Services">Professional Services</option>
+            <option value="Real Estate">Real Estate</option>
+            <option value="Retail">Retail</option>
+            <option value="Technology">Technology</option>
+            <option value="Travel">Travel</option>
+            <option value="Wellness">Wellness</option>
+            <option value="Other">Other</option>
           </select>
           <input className="onboard-input" placeholder="Social Media Handles (if applicable)" value={business.social_media_handles} onChange={(e) => updateBusiness("social_media_handles", e.target.value)} />
         </StepCard>

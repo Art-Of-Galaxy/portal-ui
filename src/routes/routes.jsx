@@ -31,9 +31,17 @@ const withLayout = (Page, props = {}) => (
   </AuthenticatedLayout>
 );
 
+// Opt into React Router v7 behavior now to silence the two future-flag
+// warnings that surface in the dev console. Both are safe to enable
+// today on v6.
+const ROUTER_FUTURE = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+};
+
 const AppRoutes = () => {
   return (
-    <Router>
+    <Router future={ROUTER_FUTURE}>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />

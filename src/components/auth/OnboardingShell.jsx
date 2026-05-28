@@ -6,13 +6,13 @@ import { authAppearance } from "../../config/authAppearance";
 
 function OnboardingShell({
   children,
-  showHomeLink,
-  showLanguage,
-  homePath,
-  homeLabel,
-  showTopLogo,
-  backgroundImageSrc,
-  backgroundImageAlt,
+  showHomeLink = false,
+  showLanguage = true,
+  homePath = "/",
+  homeLabel = "Home",
+  showTopLogo = true,
+  backgroundImageSrc = "",
+  backgroundImageAlt = "",
 }) {
   const [theme, setTheme] = useState(() => {
     const storedTheme = localStorage.getItem("aog-auth-theme");
@@ -109,16 +109,6 @@ OnboardingShell.propTypes = {
   showTopLogo: PropTypes.bool,
   backgroundImageSrc: PropTypes.string,
   backgroundImageAlt: PropTypes.string,
-};
-
-OnboardingShell.defaultProps = {
-  showHomeLink: false,
-  showLanguage: true,
-  homePath: "/",
-  homeLabel: "Home",
-  showTopLogo: true,
-  backgroundImageSrc: "",
-  backgroundImageAlt: "",
 };
 
 export default OnboardingShell;

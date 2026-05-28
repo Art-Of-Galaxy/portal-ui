@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Globe, Moon, Sun } from "lucide-react";
 import { authAppearance } from "../../config/authAppearance";
 
-function IconSlot({ src, alt, className, children }) {
+function IconSlot({ src = "", alt, className = "", children }) {
   if (src) {
     return <img src={src} alt={alt} className={className} />;
   }
@@ -15,11 +15,6 @@ IconSlot.propTypes = {
   alt: PropTypes.string.isRequired,
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
-};
-
-IconSlot.defaultProps = {
-  src: "",
-  className: "",
 };
 
 export default function AuthShell({ children }) {

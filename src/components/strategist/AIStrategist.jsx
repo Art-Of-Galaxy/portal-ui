@@ -58,15 +58,15 @@ function defaultRequiredCheck(brief, requiredFields) {
 
 function AIStrategist({
   service,
-  checklistSteps,
-  header,
+  checklistSteps = [],
+  header = null,
   onReadyToGenerate,
   onSessionChange,
   onRoute,
-  generateLabel,
-  generating,
-  requiredFields,
-  chatOnly,
+  generateLabel = "",
+  generating = false,
+  requiredFields = [],
+  chatOnly = false,
 }, ref) {
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -131,16 +131,27 @@ function AIStrategist({
     if (typeof onSessionChange === "function") onSessionChange(s);
   };
 
-  const lastAssistantSuggestions = useMemo(() => {
+  // Latest assistant turn's chips + whether they're multi-select.
+  // Multi-select state is persisted via a `chip_meta` attachment on the
+  // message so a page reload preserves the mode.
+  const lastAssistantChips = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i];
       if (m.role === "assistant" && Array.isArray(m.suggestions) && m.suggestions.length) {
-        return m.suggestions;
+        const meta = (Array.isArray(m.attachments) ? m.attachments : [])
+          .find((a) => a && a.type === "chip_meta");
+        return { items: m.suggestions, multi: Boolean(meta?.multi_select) };
       }
       if (m.role === "user") break;
     }
-    return [];
+    return { items: [], multi: false };
   }, [messages]);
+
+  // Local accumulator for multi-select chip picks. Cleared whenever the
+  // chip set changes (new assistant turn).
+  const [pickedChips, setPickedChips] = useState([]);
+  const chipsFingerprint = `${lastAssistantChips.multi ? "m" : "s"}:${lastAssistantChips.items.join("|")}`;
+  useEffect(() => { setPickedChips([]); }, [chipsFingerprint]);
 
   async function sendMessage(text) {
     const trimmed = (text || "").trim();
@@ -182,7 +193,21 @@ function AIStrategist({
       document.getElementById("strategist-composer")?.focus();
       return;
     }
+    // Multi-select mode: toggle the pick into local state instead of
+    // sending immediately. User confirms with the "Send N answers" button.
+    if (lastAssistantChips.multi) {
+      setPickedChips((prev) => (
+        prev.includes(label) ? prev.filter((v) => v !== label) : [...prev, label]
+      ));
+      return;
+    }
     sendMessage(label);
+  }
+
+  function handleSubmitPickedChips() {
+    if (!pickedChips.length) return;
+    sendMessage(pickedChips.join(", "));
+    setPickedChips([]);
   }
 
   function handleSubmit(e) {
@@ -318,19 +343,40 @@ function AIStrategist({
             </div>
           ) : null}
 
-          {/* Quick-reply chips: shown under the last assistant message. */}
-          {!sending && lastAssistantSuggestions.length ? (
-            <div className="strategist-chips">
-              {lastAssistantSuggestions.map((s) => (
+          {/* Quick-reply chips. In single-select mode (the default) a tap
+              auto-submits the chip. In multi-select mode the user ticks
+              chips and confirms with the "Send N" button. */}
+          {!sending && lastAssistantChips.items.length ? (
+            <div className={`strategist-chips ${lastAssistantChips.multi ? "is-multi" : ""}`}>
+              {lastAssistantChips.items.map((s) => {
+                const isPicked = pickedChips.includes(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    className={`strategist-chip ${isPicked ? "is-picked" : ""}`}
+                    onClick={() => handleChipClick(s)}
+                    aria-pressed={lastAssistantChips.multi ? isPicked : undefined}
+                  >
+                    {lastAssistantChips.multi && isPicked ? (
+                      <Check size={11} className="strategist-chip-tick" />
+                    ) : null}
+                    {s}
+                  </button>
+                );
+              })}
+              {lastAssistantChips.multi ? (
                 <button
-                  key={s}
                   type="button"
-                  className="strategist-chip"
-                  onClick={() => handleChipClick(s)}
+                  className="strategist-chip-submit"
+                  onClick={handleSubmitPickedChips}
+                  disabled={!pickedChips.length}
                 >
-                  {s}
+                  {pickedChips.length
+                    ? `Send ${pickedChips.length} answer${pickedChips.length === 1 ? "" : "s"}`
+                    : "Pick one or more"}
                 </button>
-              ))}
+              ) : null}
             </div>
           ) : null}
 
@@ -571,7 +617,20 @@ AttachmentCard.propTypes = {
   attachment: PropTypes.object.isRequired,
 };
 
-AIStrategist.propTypes = {
+// Defaults moved into the function signature above. defaultProps on
+// forwardRef components is unsupported and emits a console warning in
+// React 18+ / required removal in React 19.
+
+// forwardRef wrapper: parent pages get an imperative handle with
+// `startOver()` so they can host their own Start-over button outside
+// the chat shell (the AI Manager page does this).
+const AIStrategistForwarded = forwardRef(AIStrategist);
+AIStrategistForwarded.displayName = "AIStrategist";
+
+// propTypes go on the FORWARDED component, not the inner render fn.
+// Attaching them to the inner function triggered:
+//   "forwardRef render functions do not support propTypes or defaultProps".
+AIStrategistForwarded.propTypes = {
   service: PropTypes.string.isRequired,
   checklistSteps: PropTypes.arrayOf(
     PropTypes.shape({
@@ -589,21 +648,4 @@ AIStrategist.propTypes = {
   chatOnly: PropTypes.bool,
 };
 
-AIStrategist.defaultProps = {
-  checklistSteps: [],
-  header: null,
-  onReadyToGenerate: undefined,
-  onSessionChange: undefined,
-  onRoute: undefined,
-  generateLabel: "",
-  generating: false,
-  requiredFields: [],
-  chatOnly: false,
-};
-
-// forwardRef wrapper: parent pages get an imperative handle with
-// `startOver()` so they can host their own Start-over button outside
-// the chat shell (the AI Manager page does this).
-const AIStrategistForwarded = forwardRef(AIStrategist);
-AIStrategistForwarded.displayName = "AIStrategist";
 export default AIStrategistForwarded;

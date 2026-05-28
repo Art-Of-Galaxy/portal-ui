@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import PropTypes from "prop-types";
 
-export default function PasswordField({ name, placeholder, autoComplete, disabled }) {
+export default function PasswordField({ name, placeholder, autoComplete, disabled = false }) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -36,6 +36,3 @@ PasswordField.propTypes = {
   disabled: PropTypes.bool,
 };
 
-PasswordField.defaultProps = {
-  disabled: false,
-};

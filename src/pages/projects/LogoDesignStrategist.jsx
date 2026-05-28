@@ -109,6 +109,7 @@ export default function LogoDesignStrategist() {
           customColors={briefForResult.custom_colors}
           typography={briefForResult.selected_typography}
           statusLabel="Done"
+          projectId={result.project_id}
         />
       </div>
     );

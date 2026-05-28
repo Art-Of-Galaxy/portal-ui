@@ -11,8 +11,17 @@ export function AuthenticatedLayout({ children }) {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const email = localStorage.getItem("user_email");
-    if (!token || !email) return;
-    if (localStorage.getItem("profile_photo_url")) return;
+    if (!token || !email) return undefined;
+
+    // Skip the fetch only when we already have every cached field the
+    // shell consumes (avatar, name, AND the admin flag). Older sessions
+    // were caching photo+name but never is_admin, which is why the
+    // Sidebar fell back to a hardcoded "Admin" badge for normal users.
+    const hasAll =
+      localStorage.getItem("profile_photo_url") !== null &&
+      localStorage.getItem("user_name") &&
+      localStorage.getItem("user_is_admin") !== null;
+    if (hasAll) return undefined;
 
     let cancelled = false;
     (async () => {
@@ -27,6 +36,9 @@ export function AuthenticatedLayout({ children }) {
         if (profile.name) {
           localStorage.setItem("user_name", profile.name);
         }
+        // Persist is_admin so the Sidebar role badge reflects real state
+        // (default false when the backend doesn't return the flag).
+        localStorage.setItem("user_is_admin", profile.is_admin ? "true" : "false");
         setProfileVersion((v) => v + 1);
       } catch {
         /* silent — header/sidebar fall back to initials */

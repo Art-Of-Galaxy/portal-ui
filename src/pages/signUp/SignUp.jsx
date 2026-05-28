@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import AuthShell from "../../components/auth/AuthShell";
@@ -14,6 +14,25 @@ const SignUp = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Mirror of LoginForm: only show Google CTA when the backend confirms
+  // OAuth is configured.
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [providerCheckDone, setProviderCheckDone] = useState(false);
+
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
+    if (!API_URL) { setProviderCheckDone(true); return; }
+    let cancelled = false;
+    fetch(`${API_URL}/authentication/status`, { credentials: "omit" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (cancelled) return;
+        setGoogleEnabled(Boolean(data?.providers?.google));
+      })
+      .catch(() => { /* keep button hidden on failure */ })
+      .finally(() => { if (!cancelled) setProviderCheckDone(true); });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -39,7 +58,10 @@ const SignUp = () => {
 
   const handleGoogleRedirect = () => {
     const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
-    window.location.href = `${API_URL}/authentication/google`;
+    // mode=signup tells the backend callback to refuse existing emails
+    // (we send them to a "you already have an account, sign in?" screen
+    // instead of treating it as a silent login).
+    window.location.href = `${API_URL}/authentication/google?mode=signup`;
   };
 
   return (
@@ -47,21 +69,25 @@ const SignUp = () => {
       <div className="auth-form-wrapper">
         <h1 className="auth-title">Sign up</h1>
 
-        <button
-          type="button"
-          className="auth-google-btn"
-          onClick={handleGoogleRedirect}
-          disabled={loading}
-        >
-          <img
-            src={authAppearance.icons.google}
-            alt="Google"
-            className="auth-google-icon"
-          />
-          <span>Continue with Google</span>
-        </button>
+        {providerCheckDone && googleEnabled ? (
+          <>
+            <button
+              type="button"
+              className="auth-google-btn"
+              onClick={handleGoogleRedirect}
+              disabled={loading}
+            >
+              <img
+                src={authAppearance.icons.google}
+                alt="Google"
+                className="auth-google-icon"
+              />
+              <span>Continue with Google</span>
+            </button>
 
-        <div className="auth-separator">or</div>
+            <div className="auth-separator">or</div>
+          </>
+        ) : null}
 
         <form className="auth-form-wrapper" onSubmit={handleSubmit}>
           {error ? <p className="auth-error">{error}</p> : null}

@@ -30,7 +30,7 @@ import { signUpLogout } from "../redux/signUpSlice";
 const NAV_ITEMS = [
   { icon: Home, label: "Home", path: "/home" },
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  // { icon: Sparkles, label: "AI Manager", path: "/ai-manager", badge: { text: "New", tone: "accent" } },
+  { icon: Sparkles, label: "AI Manager", path: "/ai-manager", badge: { text: "New", tone: "accent" } },
   { icon: Briefcase, label: "New Projects", path: "/new-projects" },
   { icon: Users, label: "Customers", path: "/customers" },
   { icon: MessageSquare, label: "Conversations", path: "/conversations" },
@@ -49,7 +49,7 @@ const SUPPORT_ITEMS = [
   { icon: UserPlus, label: "Invite team members", path: "/invite-team" },
 ];
 
-function NavButton({ icon: Icon, label, path, badge, onClick, isActive }) {
+function NavButton({ icon: Icon, label, path, badge = null, onClick, isActive = false }) {
   return (
     <button
       type="button"
@@ -74,18 +74,22 @@ NavButton.propTypes = {
   isActive: PropTypes.bool,
 };
 
-NavButton.defaultProps = { badge: null, isActive: false };
 
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const menuRef = useRef(null);
 
   const userName = localStorage.getItem("user_name") || "Andrey Vasilyev";
   const profilePhotoUrl = localStorage.getItem("profile_photo_url");
-  const userRole = "Admin";
+  // Show "Admin" only when the backend profile explicitly flagged the
+  // user as admin. AuthenticatedLayout persists `user_is_admin` from
+  // GET /authentication/profile; absent or "false" means a normal user
+  // and we hide the role line entirely.
+  const isAdmin = localStorage.getItem("user_is_admin") === "true";
   const initials = useMemo(() => {
     const parts = userName.trim().split(/\s+/).slice(0, 2);
     return parts.map((p) => p[0]?.toUpperCase() || "").join("") || "A";
@@ -118,11 +122,27 @@ export function Sidebar() {
 
       <div className="portal-user-card" ref={menuRef} onClick={() => setMenuOpen((o) => !o)}>
         <div className="portal-user-avatar">
-          {profilePhotoUrl ? <img src={profilePhotoUrl} alt="" /> : initials}
+          {/* Google avatar URLs occasionally fail (referer policy, rate
+              limit, expired). When that happens, fall back to the
+              user's initials instead of the browser's broken-image
+              placeholder. */}
+          {profilePhotoUrl && !avatarFailed ? (
+            <img
+              src={profilePhotoUrl}
+              alt=""
+              referrerPolicy="no-referrer"
+              onError={() => setAvatarFailed(true)}
+            />
+          ) : (
+            initials
+          )}
         </div>
         <div className="portal-user-info">
           <span className="portal-user-name">{userName}</span>
-          <span className="portal-user-role">{userRole}</span>
+          {/* Only badge the user as Admin when the backend says so;
+              otherwise the secondary line is hidden so normal users
+              don't see a misleading "Admin" label. */}
+          {isAdmin ? <span className="portal-user-role">Admin</span> : null}
         </div>
         <ChevronDown size={16} className="portal-user-caret" />
         {menuOpen ? (

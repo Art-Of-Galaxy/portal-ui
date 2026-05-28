@@ -539,14 +539,29 @@
 .onboard-input,
 .onboard-chip {
   width: 100%;
-  min-height: 2.2rem;
+  min-height: 2.4rem;
   border-radius: 9px;
   border: 1px solid #d5dbe5;
-  background: rgba(255, 255, 255, 0.95);
+  /* Opaque background (not rgba 0.95) so dark page bg never bleeds
+     through and the dropdown options stay on a clean white surface. */
+  background-color: #ffffff;
   padding: 0 0.8rem;
   font-size: 14px;
-  color: #334863;
+  color: #1e1b48;
 }
+
+/* Force the OS-native dropdown popup to render on a white surface with
+   dark text. Without this, on dark OS themes the <option> list can
+   pick up native dark styling making the labels nearly unreadable
+   (the "dark text on dark background" complaint from the test user). */
+select.onboard-input { color-scheme: light; }
+select.onboard-input option {
+  background-color: #ffffff;
+  color: #1e1b48;
+}
+
+/* Placeholder colour for inputs (was inheriting too light by default). */
+.onboard-input::placeholder { color: #6b7a93; opacity: 1; }
 
 .onboard-chip {
   text-align: left;
@@ -554,8 +569,9 @@
 }
 
 .onboard-chip.is-selected {
-  border-color: #4d5cff;
+  border-color: #5540ff;
   background: #eef1ff;
+  color: #1e1b48;
 }
 
 .onboard-grid-two {
@@ -688,13 +704,48 @@
 }
 
 .project-card {
+  position: relative;
   height: 100%;
+  /* Make sure the active press feels responsive even before navigate fires. */
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
+
+.project-card:active { transform: translateY(0) scale(0.99); }
 
 .project-card.is-selected {
   border-color: var(--portal-accent-solid);
-  box-shadow: 0 0 0 3px rgba(85, 64, 255, 0.18), var(--portal-shadow-md);
+  border-width: 2px;
+  box-shadow: 0 0 0 4px rgba(85, 64, 255, 0.22), var(--portal-shadow-md);
   transform: translateY(-2px);
+}
+
+/* Checkmark badge in the top-right of the selected card so the picked
+   service is obvious at a glance (the previous border-only state was
+   easy to miss on the dark theme). */
+.project-card.is-selected::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5540ff 0%, #00ff89 100%);
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(85, 64, 255, 0.35);
+}
+
+.project-card.is-selected::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  right: 17px;
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg);
+  z-index: 3;
 }
 
 .project-card img {
@@ -733,7 +784,10 @@
   font-size: 19px;
   line-height: 1.25;
   min-height: 2.4em;
-  color: #263b55;
+  /* Use the theme variable so the dark page background (auth-theme-dark)
+     gets light text. The previous hard-coded #263b55 was dark-on-dark
+     and unreadable, per the end-user feedback. */
+  color: var(--portal-text);
 }
 
 .project-card p {
@@ -741,7 +795,7 @@
   font-size: 12px;
   line-height: 1.35;
   min-height: 3.2em;
-  color: #70839b;
+  color: var(--portal-text-muted);
 }
 
 .project-start-btn {
@@ -855,4 +909,127 @@
   .onboard-progress-label {
     font-size: 16px;
   }
+}
+
+/* =========================================================
+   Google OAuth callback page (/auth/callback)
+   ========================================================= */
+
+.auth-callback-card {
+  width: min(440px, 92vw);
+  margin: 0 auto;
+}
+
+.auth-callback-status {
+  text-align: center;
+  padding: 2rem 1.8rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  color: #1e1b48;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.auth-callback-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.auth-callback-status.is-success .auth-callback-icon {
+  background: rgba(0, 255, 137, 0.18);
+  color: #0a8d56;
+}
+
+.auth-callback-status.is-warn .auth-callback-icon {
+  background: rgba(234, 88, 12, 0.16);
+  color: #c2410c;
+}
+
+.auth-callback-status.is-info .auth-callback-icon {
+  background: rgba(85, 64, 255, 0.16);
+  color: #5540ff;
+}
+
+.auth-callback-status.is-error .auth-callback-icon {
+  background: rgba(232, 77, 77, 0.18);
+  color: #c0392b;
+}
+
+.auth-callback-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f1c2e;
+}
+
+.auth-callback-body {
+  margin: 0;
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.55;
+}
+
+.auth-callback-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.6rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(85, 64, 255, 0.10);
+  color: #5540ff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.auth-callback-spin { animation: auth-callback-spin 0.9s linear infinite; }
+@keyframes auth-callback-spin { to { transform: rotate(360deg); } }
+
+.auth-callback-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.auth-callback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.2rem;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.auth-callback-btn.is-primary {
+  background: linear-gradient(135deg, #5540ff 0%, #00ff89 100%);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(85, 64, 255, 0.28);
+}
+
+.auth-callback-btn.is-primary:hover { transform: translateY(-1px); }
+
+.auth-callback-btn.is-ghost {
+  background: transparent;
+  border-color: rgba(17, 44, 75, 0.18);
+  color: #1e1b48;
+}
+
+.auth-callback-btn.is-ghost:hover {
+  background: rgba(85, 64, 255, 0.06);
+  border-color: rgba(85, 64, 255, 0.3);
 }

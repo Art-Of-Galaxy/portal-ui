@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Search,
   Compass,
@@ -17,6 +17,12 @@ export function Header() {
   const userName = localStorage.getItem("user_name") || "Andrey";
   const profilePhotoUrl = localStorage.getItem("profile_photo_url");
   const initial = useMemo(() => (userName[0] || "A").toUpperCase(), [userName]);
+  // Google avatar URLs occasionally fail (referer policy, rate limit,
+  // expired). Fall back to the user's initial in a coloured circle
+  // when the image can't load instead of showing the browser's
+  // broken-image placeholder.
+  const [imgFailed, setImgFailed] = useState(false);
+  const showImage = profilePhotoUrl && !imgFailed;
 
   return (
     <header className="portal-header">
@@ -56,7 +62,16 @@ export function Header() {
           {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         <button type="button" className="portal-icon-btn is-avatar" aria-label="Profile">
-          {profilePhotoUrl ? <img src={profilePhotoUrl} alt="" /> : initial}
+          {showImage ? (
+            <img
+              src={profilePhotoUrl}
+              alt=""
+              referrerPolicy="no-referrer"
+              onError={() => setImgFailed(true)}
+            />
+          ) : (
+            initial
+          )}
         </button>
       </div>
     </header>

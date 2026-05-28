@@ -14,7 +14,7 @@ import PropTypes from "prop-types";
 // the URL ourselves, sniff the response for "<svg ...", and inline it via
 // dangerouslySetInnerHTML (this requires CORS on the host, which the
 // portal's S3 bucket already permits).
-export default function SafeImage({ src, alt, className, style, onError }) {
+export default function SafeImage({ src = "", alt = "", className, style, onError }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [svgMarkup, setSvgMarkup] = useState(null);
 
@@ -89,10 +89,3 @@ SafeImage.propTypes = {
   onError: PropTypes.func,
 };
 
-SafeImage.defaultProps = {
-  src: "",
-  alt: "",
-  className: undefined,
-  style: undefined,
-  onError: undefined,
-};
