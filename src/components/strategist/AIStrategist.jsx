@@ -67,6 +67,10 @@ function AIStrategist({
   generating = false,
   requiredFields = [],
   chatOnly = false,
+  /* When set, drives which session is loaded (instead of the localStorage
+     "last session" heuristic). The AI Manager uses this to switch
+     between multiple parallel conversations. */
+  activeSessionId = null,
 }, ref) {
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -75,19 +79,37 @@ function AIStrategist({
   const [ready, setReady] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendingMode, setSendingMode] = useState("thinking");
   const [loadingSession, setLoadingSession] = useState(true);
   const [error, setError] = useState("");
   const scrollRef = useRef(null);
 
-  // Load or create a session on mount. The session id persists in
-  // localStorage so refresh resumes the same conversation.
+  // Load or create a session on mount. Three modes:
+  //   1. activeSessionId set    -> load that session
+  //   2. localStorage has an id -> resume
+  //   3. otherwise              -> start a fresh one
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoadingSession(true);
       setError("");
       try {
-        const existingId = readSessionId(service);
+        // Mode 1: parent told us exactly which session to load.
+        if (activeSessionId) {
+          try {
+            const res = await apiServices.strategist_get(activeSessionId);
+            if (cancelled) return;
+            if (res?.success && res.session) {
+              applySession(res.session);
+              setLoadingSession(false);
+              return;
+            }
+          } catch {
+            /* fall through to fresh */
+          }
+        }
+        // Mode 2: resume from localStorage.
+        const existingId = activeSessionId ? null : readSessionId(service);
         if (existingId) {
           try {
             const res = await apiServices.strategist_get(existingId);
@@ -101,6 +123,7 @@ function AIStrategist({
             // session missing or expired; fall through to a fresh one
           }
         }
+        // Mode 3: start fresh.
         const fresh = await apiServices.strategist_start({ service });
         if (cancelled) return;
         if (!fresh?.success) throw new Error(fresh?.message || "Could not start session");
@@ -113,7 +136,7 @@ function AIStrategist({
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [service]);
+  }, [service, activeSessionId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -159,6 +182,15 @@ function AIStrategist({
     setInput("");
     setError("");
 
+    // Heuristic: when the user explicitly asks for a logo / generation,
+    // we expect the next turn to invoke generate_logo_design, which
+    // takes ~15-30s. Mark sendingMode so the typing indicator shows a
+    // shimmer card with an honest expectation instead of an opaque
+    // three-dot loader (this is why generation felt "stuck").
+    const looksLikeGeneration = /\b(make|generate|create|design|build)\b.*\b(logo|brand|concept|design)\b/i.test(trimmed)
+      || /\b(go\s+ahead|do\s+it|ready|okay|yes|please)\b/i.test(trimmed);
+    setSendingMode(looksLikeGeneration ? "generating" : "thinking");
+
     // Optimistic user bubble; we replace messages from the server response.
     setMessages((prev) => [
       ...prev,
@@ -183,6 +215,7 @@ function AIStrategist({
       setMessages((prev) => prev.filter((m) => !String(m.id || "").startsWith("tmp-")));
     } finally {
       setSending(false);
+      setSendingMode("thinking");
     }
   }
 
@@ -335,10 +368,30 @@ function AIStrategist({
               <span className="strategist-msg-avatar">
                 <img src={aiStrategistAvatar} alt="" />
               </span>
-              <div className="strategist-msg-bubble">
-                <span className="strategist-typing">
-                  <span /><span /><span />
-                </span>
+              <div className="strategist-msg-bubble strategist-msg-bubble-thinking">
+                {sendingMode === "generating" ? (
+                  /* Generation can take 15-30s. Show a shimmer card
+                     with concrete expectation copy so the chat doesn't
+                     feel frozen. */
+                  <div className="strategist-thinking-card">
+                    <div className="strategist-thinking-title">
+                      <span className="strategist-typing">
+                        <span /><span /><span />
+                      </span>
+                      Generating concepts
+                    </div>
+                    <div className="strategist-thinking-sub">
+                      This usually takes 15 to 30 seconds. I&apos;m calling the image model now.
+                    </div>
+                    <div className="strategist-shimmer-grid" aria-hidden="true">
+                      <span /><span /><span /><span />
+                    </div>
+                  </div>
+                ) : (
+                  <span className="strategist-typing">
+                    <span /><span /><span />
+                  </span>
+                )}
               </div>
             </div>
           ) : null}
@@ -521,6 +574,47 @@ function AttachmentCard({ attachment }) {
   }, [previewIndex, images.length]);
 
   if (!attachment || typeof attachment !== "object") return null;
+
+  // File-list attachment: list_user_files returns this so the manager
+  // can show the user's recent files inline (image thumbs + names).
+  if (attachment.type === "file_list" && Array.isArray(attachment.files)) {
+    const files = attachment.files.filter((f) => f && f.url);
+    if (!files.length) return null;
+    return (
+      <div className="strategist-attachment strategist-attachment-files">
+        <div className="strategist-attachment-header">
+          <strong>{attachment.title || "Your files"}</strong>
+          <span>{files.length} file{files.length === 1 ? "" : "s"}</span>
+        </div>
+        <ul className="strategist-attachment-filelist">
+          {files.map((f) => {
+            const isImage = String(f.mime_type || "").startsWith("image/")
+              || /\.(png|jpe?g|gif|webp|svg|bmp)(\?|#|$)/i.test(f.url);
+            return (
+              <li key={f.id || f.url}>
+                <a href={f.url} target="_blank" rel="noreferrer" className="strategist-attachment-file">
+                  <span className="strategist-attachment-file-thumb">
+                    {isImage
+                      ? <img src={f.url} alt="" referrerPolicy="no-referrer" />
+                      : <span className="strategist-attachment-file-ext">
+                          {(f.name || "file").split(".").pop().slice(0, 4).toUpperCase()}
+                        </span>}
+                  </span>
+                  <span className="strategist-attachment-file-meta">
+                    <span className="strategist-attachment-file-name">{f.name || "Untitled"}</span>
+                    <span className="strategist-attachment-file-sub">
+                      {[f.category, f.source].filter(Boolean).join(" · ")}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
+
   if (attachment.type !== "logo_concepts" || !images.length) return null;
 
   // 3+ images flow into a 4-up row (small thumbs), 1-2 stay 2-up.
@@ -646,6 +740,7 @@ AIStrategistForwarded.propTypes = {
   generating: PropTypes.bool,
   requiredFields: PropTypes.arrayOf(PropTypes.string),
   chatOnly: PropTypes.bool,
+  activeSessionId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
 export default AIStrategistForwarded;

@@ -181,6 +181,13 @@ export const apiServices = {
             headers: { 'Content-Type': 'application/json' },
         }
     ),
+    strategist_delete: async ({ session_id }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`strategist/sessions/${session_id}${qs}`, {
+            method: 'DELETE',
+        });
+    },
 
     // ---------- Quiz drafts (Fill it out yourself) ----------
     quiz_draft_start: async ({ service }) => {

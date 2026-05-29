@@ -5150,6 +5150,136 @@ html.portal-theme-dark {
 .strategist-typing span:nth-child(2) { animation-delay: 0.15s; }
 .strategist-typing span:nth-child(3) { animation-delay: 0.3s; }
 
+/* Rich "generating" indicator. Replaces the three-dot bubble when the
+   user just sent a generation request so the chat doesn't feel frozen
+   while the image model does its 15-30s work. */
+.strategist-msg-bubble-thinking { padding: 0.8rem 1rem; }
+
+.strategist-thinking-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 240px;
+}
+
+.strategist-thinking-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--portal-text);
+}
+
+.strategist-thinking-sub {
+  font-size: 12px;
+  color: var(--portal-text-muted);
+  line-height: 1.45;
+}
+
+.strategist-shimmer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.strategist-shimmer-grid span {
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(85, 64, 255, 0.08) 0%,
+    rgba(85, 64, 255, 0.22) 50%,
+    rgba(85, 64, 255, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: strategist-shimmer 1.4s ease-in-out infinite;
+}
+
+.strategist-shimmer-grid span:nth-child(2) { animation-delay: 0.12s; }
+.strategist-shimmer-grid span:nth-child(3) { animation-delay: 0.24s; }
+.strategist-shimmer-grid span:nth-child(4) { animation-delay: 0.36s; }
+
+@keyframes strategist-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Inline file-list attachment (list_user_files renders this) */
+.strategist-attachment-files {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem 0.85rem;
+}
+
+.strategist-attachment-filelist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.strategist-attachment-file {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s;
+}
+
+.strategist-attachment-file:hover { background: var(--portal-surface-muted); }
+
+.strategist-attachment-file-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--portal-surface-muted);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.strategist-attachment-file-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.strategist-attachment-file-ext {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--portal-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.strategist-attachment-file-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.strategist-attachment-file-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--portal-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.strategist-attachment-file-sub {
+  font-size: 11px;
+  color: var(--portal-text-muted);
+}
+
 @keyframes strategist-bounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
   40% { transform: translateY(-4px); opacity: 1; }
@@ -6126,6 +6256,222 @@ html.portal-theme-dark {
 .ai-manager-page .strategist-chat,
 .ai-manager-page .strategist-shell { min-height: 740px; max-height: 740px; }
 .ai-manager-page .strategist-chat-scroll { max-height: 640px; }
+
+/* -------- AI Manager: chat-list sidebar + active chat panel layout --
+   The shell is a two-column grid: the conversation list on the left,
+   the active chat panel on the right. Mirrors the ChatGPT / Claude
+   layout the user asked for. */
+.ai-manager-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 1.4rem;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+@media (max-width: 920px) {
+  .ai-manager-shell { grid-template-columns: minmax(0, 1fr); }
+  .ai-manager-chatlist { position: static; }
+}
+
+.ai-manager-chatlist {
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 18px;
+  padding: 1rem 0.8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  position: sticky;
+  top: 1.2rem;
+  max-height: calc(100vh - 4rem);
+  overflow: hidden;
+}
+
+.ai-manager-newchat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(85, 64, 255, 0.25);
+}
+
+.ai-manager-newchat:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ai-manager-chatlist-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--portal-text-muted);
+  margin: 0.4rem 0 0.2rem 0.5rem;
+}
+
+.ai-manager-chatlist-empty {
+  font-size: 12px;
+  color: var(--portal-text-muted);
+  padding: 0.5rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ai-manager-chatlist-items {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.5rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ai-manager-chatlist-item {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 9px;
+  cursor: pointer;
+  color: var(--portal-text);
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.ai-manager-chatlist-item:hover { background: var(--portal-surface-muted); }
+
+.ai-manager-chatlist-item.is-active {
+  background: var(--portal-accent-tint);
+  color: var(--portal-accent-solid);
+}
+
+.ai-manager-chatlist-title {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-manager-chatlist-time {
+  font-size: 10px;
+  color: var(--portal-text-muted);
+  flex-shrink: 0;
+}
+
+.ai-manager-chatlist-item.is-active .ai-manager-chatlist-time {
+  color: var(--portal-accent-solid);
+  opacity: 0.7;
+}
+
+/* Each row wraps the main item button + a 3-dot menu trigger.
+   `position: relative` anchors the dropdown menu below the trigger. */
+.ai-manager-chatlist-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ai-manager-chatlist-row .ai-manager-chatlist-item { flex: 1; min-width: 0; }
+
+.ai-manager-chatlist-menu-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--portal-text-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, background 0.12s;
+}
+
+/* Reveal the menu button on hover or when its own menu is open, and
+   hide the timestamp at the same time so they don't visually collide
+   in the same right-edge slot. */
+.ai-manager-chatlist-row:hover .ai-manager-chatlist-menu-btn,
+.ai-manager-chatlist-row:focus-within .ai-manager-chatlist-menu-btn {
+  opacity: 1;
+}
+
+.ai-manager-chatlist-row:hover .ai-manager-chatlist-time,
+.ai-manager-chatlist-row:focus-within .ai-manager-chatlist-time {
+  visibility: hidden;
+}
+
+.ai-manager-chatlist-menu-btn:hover {
+  background: rgba(85, 64, 255, 0.08);
+  color: var(--portal-text);
+}
+
+.ai-manager-chatlist-menu {
+  position: absolute;
+  /* Anchor above the row so the menu pops UP toward the top of the
+     screen (avoids being clipped near the bottom of the chat list and
+     matches the user's expectation). */
+  bottom: calc(100% + 4px);
+  right: 4px;
+  z-index: 20;
+  min-width: 140px;
+  background: var(--portal-card-bg);
+  border: 1px solid var(--portal-border);
+  border-radius: 10px;
+  box-shadow: var(--portal-shadow-md);
+  padding: 4px;
+}
+
+.ai-manager-chatlist-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--portal-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ai-manager-chatlist-menu-item:hover { background: var(--portal-surface-muted); }
+
+.ai-manager-chatlist-menu-item.is-danger { color: #c0392b; }
+.ai-manager-chatlist-menu-item.is-danger:hover { background: rgba(192, 57, 43, 0.08); }
+
+.ai-manager-chatpanel {
+  min-width: 0;
+}
+
+/* When the AI Manager wraps the strategist in the chat panel, drop the
+   max-width on the inner shell (the outer ai-manager-shell already
+   constrains it) so the chat fills the right column. */
+.ai-manager-chatpanel .strategist-shell {
+  max-width: none;
+  margin: 0;
+}
 
 /* =========================================================
    Credits badge (header)
