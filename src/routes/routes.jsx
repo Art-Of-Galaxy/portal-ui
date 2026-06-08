@@ -10,13 +10,17 @@ import Projects from "../pages/projects/Projects";
 import CreateProjectSelection from "../pages/projects/CreateProjectSelection";
 import NewProject from "../pages/projects/NewProject";
 import BrandingDesign from "../pages/projects/BrandingDesign";
-import BrandGuidelinesForm from "../pages/projects/BrandGuidelinesForm";
+import BrandGuidelines from "../pages/projects/BrandGuidelines";
+import BrandGuidelinesStrategist from "../pages/projects/BrandGuidelinesStrategist";
+import BrandGuidelinesQuiz from "../pages/projects/BrandGuidelinesQuiz";
 import RebrandingForm from "../pages/projects/RebrandingForm";
 import EcommerceMockupsForm from "../pages/projects/EcommerceMockupsForm";
 import LogoDesign from "../pages/projects/LogoDesign";
 import LogoDesignStrategist from "../pages/projects/LogoDesignStrategist";
 import LogoDesignQuiz from "../pages/projects/LogoDesignQuiz";
 import AIManager from "../pages/AIManager";
+import AIVideoProduction from "../pages/projects/AIVideoProduction";
+import UGCAdsForm from "../pages/projects/UGCAdsForm";
 import MyFiles from "../pages/files/MyFiles";
 import ProjectDetail from "../pages/projects/ProjectDetail";
 import Authentication from "../components/Authentication";
@@ -67,7 +71,9 @@ const AppRoutes = () => {
           <Route path="/new-projects/branding-design/logo" element={withLayout(LogoDesign)} />
           <Route path="/new-projects/branding-design/logo/strategist" element={withLayout(LogoDesignStrategist)} />
           <Route path="/new-projects/branding-design/logo/quiz" element={withLayout(LogoDesignQuiz)} />
-          <Route path="/new-projects/branding-design/brand-guidelines" element={withLayout(BrandGuidelinesForm)} />
+          <Route path="/new-projects/branding-design/brand-guidelines" element={withLayout(BrandGuidelines)} />
+          <Route path="/new-projects/branding-design/brand-guidelines/strategist" element={withLayout(BrandGuidelinesStrategist)} />
+          <Route path="/new-projects/branding-design/brand-guidelines/quiz" element={withLayout(BrandGuidelinesQuiz)} />
           <Route path="/new-projects/branding-design/printing" element={withLayout(ComingSoon, { title: "Printing Design", description: "Print-ready collateral powered by GPT and Claude Sonnet. Tool flow coming soon." })} />
           <Route path="/new-projects/branding-design/rebranding" element={withLayout(RebrandingForm)} />
           <Route path="/new-projects/branding-design/packaging" element={withLayout(ComingSoon, { title: "Packaging Design", description: "Production-ready packaging concepts. Tool flow coming soon." })} />
@@ -80,7 +86,8 @@ const AppRoutes = () => {
           <Route path="/new-projects/email" element={withLayout(ComingSoon, { title: "Email Marketing", description: "Lifecycle automations, broadcasts and template design. Coming soon." })} />
           <Route path="/new-projects/campaigns" element={withLayout(ComingSoon, { title: "B2B & B2C Campaigns", description: "Multi-channel campaign strategy and creative. Coming soon." })} />
           <Route path="/new-projects/ai-integrations" element={withLayout(ComingSoon, { title: "AI Integrations & Automations", description: "Voice agents, chatbots and workflow automation. Coming soon." })} />
-          <Route path="/new-projects/video" element={withLayout(ComingSoon, { title: "AI Video Production", description: "Cinematic AI-powered video assets. Coming soon." })} />
+          <Route path="/new-projects/video" element={withLayout(AIVideoProduction)} />
+          <Route path="/new-projects/video/ugc-ads" element={withLayout(UGCAdsForm)} />
 
           <Route path="/my-projects" element={withLayout(Projects)} />
           <Route path="/my-projects/:id" element={withLayout(ProjectDetail)} />

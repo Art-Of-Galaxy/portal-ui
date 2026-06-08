@@ -146,6 +146,15 @@ export const apiServices = {
         });
         return response;
     },
+    generate_ugc_ad: async ({ form }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const response = await fetchWithConfig('ugc-ads/generate', {
+            method: 'POST',
+            body: { form, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
+    },
 
     // ---------- AI Strategist (conversational intake) ----------
     strategist_start: async ({ service }) => {

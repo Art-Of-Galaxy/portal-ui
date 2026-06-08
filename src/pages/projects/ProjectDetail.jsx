@@ -122,12 +122,19 @@ export default function ProjectDetail() {
       );
     }
     if (serviceType === "brand_guidelines") {
+      // New shape: outputData = { guidelines, deliverables, logo_prompt, ... }.
+      // Old shape (legacy projects): outputData IS the Claude spec directly.
+      // Fall back to the whole blob so legacy projects still render the
+      // identity sidebar even though they have no deliverable bundle.
+      const guidelines = output?.guidelines || output;
+      const deliverables = Array.isArray(output?.deliverables) ? output.deliverables : [];
       return (
         <BrandGuidelinesView
-          guidelines={output}
+          guidelines={guidelines}
+          deliverables={deliverables}
           brandName={project.project_name}
-          description={input.business_description}
-          tagline={input.tagline}
+          description={input.product_description || input.business_description}
+          tagline={input.slogan || input.tagline || guidelines?.positioning_statement}
           statusLabel={project.status_label}
           projectId={project.id}
         />
