@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, ChevronLeft } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 import { useLoading } from "../../context/LoadingContext";
 import BrandGuidelinesView from "./BrandGuidelinesView";
+import BrandAssetUploader from "../../components/brand/BrandAssetUploader";
 
 // Self-guided 6 step quiz for Brand Guidelines Development. Mirrors the
 // flow in 2_brand_development_flow.html: Your Brand, Your Audience,
@@ -99,6 +100,7 @@ const emptyBrief = {
   differentiation: "",
   extras: [],
   additional_notes: "",
+  brand_assets: [],
 };
 
 export default function BrandGuidelinesQuiz() {
@@ -526,6 +528,16 @@ function StepReferences({ brief, onUpdate }) {
             </button>
           );
         })}
+      </div>
+
+      <div style={{ marginTop: "1.6rem" }}>
+        <BrandAssetUploader
+          value={brief.brand_assets || []}
+          onChange={(next) => onUpdate({ brand_assets: next })}
+          projectName={brief.brand_name || "Brand Guidelines Request"}
+          label="Upload product photos or existing brand materials (optional)"
+          helper="Anything you upload gets folded into the brief and used as a reference for your logo and social media generations. Product photos make the social kit feature your actual product."
+        />
       </div>
     </div>
   );

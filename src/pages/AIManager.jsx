@@ -40,23 +40,35 @@ export default function AIManager() {
 
   // Load the full chat list whenever the page mounts (or after we
   // create / start a new chat).
+  //
+  // Active-chat resolution rules (no auto-create on page load — that's
+  // what produced the wall of "Untitled chat" rows the user was seeing):
+  //   1. If the cached activeId still exists in the list, keep it.
+  //   2. Otherwise prefer an EMPTY chat (title is null, meaning the LLM
+  //      never named it, meaning the user never sent a turn). Reusing it
+  //      avoids accumulating more "Untitled chat" stubs every visit.
+  //   3. Otherwise the most recently updated chat.
+  //   4. Otherwise null — the chat panel renders an empty-state CTA.
   const refreshSessions = useCallback(async () => {
     setSessionsLoading(true);
     try {
       const res = await apiServices.strategist_list({ service: "manager" });
       const list = res?.success && Array.isArray(res.sessions) ? res.sessions : [];
       setSessions(list);
-      // If we don't have an active chat yet, pick the most recent one.
-      // The list endpoint orders by updated_at DESC.
-      if (!activeId && list.length) {
-        setActiveId(list[0].id);
-      }
+
+      setActiveId((current) => {
+        if (current && list.some((s) => s.id === current)) return current;
+        const emptyOne = list.find((s) => !s.title);
+        if (emptyOne) return emptyOne.id;
+        if (list.length) return list[0].id;
+        return null;
+      });
     } catch {
       /* keep empty; create-new still works */
     } finally {
       setSessionsLoading(false);
     }
-  }, [activeId]);
+  }, []);
 
   useEffect(() => { refreshSessions(); }, [refreshSessions]);
 
@@ -84,6 +96,17 @@ export default function AIManager() {
 
   async function handleNewChat() {
     if (busy) return;
+    // If there's already an untitled, untouched chat sitting around,
+    // reuse it instead of spawning yet another "Untitled chat" row.
+    // Title becomes non-null as soon as the LLM names the conversation
+    // on the first user turn, so a null title is a reliable "never
+    // used" signal.
+    const existingEmpty = sessions.find((s) => !s.title);
+    if (existingEmpty) {
+      setActiveId(existingEmpty.id);
+      setSuggestedRoute("");
+      return;
+    }
     setBusy(true);
     try {
       const fresh = await apiServices.strategist_start({ service: "manager" });
@@ -280,17 +303,45 @@ export default function AIManager() {
           </ul>
         </aside>
 
-        {/* -------- Active chat panel -------- */}
+        {/* -------- Active chat panel --------
+            We deliberately do NOT mount AIStrategist with a null
+            activeSessionId. The component's "no id" path falls through
+            to strategist_start, which is exactly the auto-create that
+            spammed the sidebar with Untitled chat rows. Instead we show
+            an empty-state CTA and only mount the chat once the user
+            either picks an existing conversation or clicks New chat. */}
         <div className="ai-manager-chatpanel">
-          <AIStrategist
-            ref={strategistRef}
-            service="manager"
-            chatOnly
-            activeSessionId={activeId}
-            header={header}
-            onRoute={handleRoute}
-            onSessionChange={handleSessionChange}
-          />
+          {activeId ? (
+            <AIStrategist
+              ref={strategistRef}
+              service="manager"
+              chatOnly
+              activeSessionId={activeId}
+              header={header}
+              onRoute={handleRoute}
+              onSessionChange={handleSessionChange}
+            />
+          ) : (
+            <div className="ai-manager-empty">
+              <div className="ai-manager-empty-icon">
+                <MessageSquare size={28} />
+              </div>
+              <h2>No chat selected</h2>
+              <p>
+                Pick a conversation from the left to pick up where you left off,
+                or start a fresh one whenever you&apos;re ready.
+              </p>
+              <button
+                type="button"
+                className="ai-manager-empty-cta"
+                onClick={handleNewChat}
+                disabled={busy}
+              >
+                {busy ? <Loader2 size={14} className="strategist-spin" /> : <Plus size={14} />}
+                Start a new chat
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

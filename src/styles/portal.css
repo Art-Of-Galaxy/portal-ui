@@ -6527,6 +6527,62 @@ html.portal-theme-dark {
   margin: 0;
 }
 
+/* Empty state shown in the chat panel when no chat is selected. Mirrors
+   the chat card chrome so the right column doesn't collapse to nothing. */
+.ai-manager-empty {
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  padding: 56px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-height: 360px;
+  justify-content: center;
+}
+.ai-manager-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--portal-accent-soft);
+  color: var(--portal-accent-solid);
+  display: grid;
+  place-items: center;
+}
+.ai-manager-empty h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--portal-text);
+  margin: 0;
+}
+.ai-manager-empty p {
+  font-size: 13px;
+  color: var(--portal-text-muted);
+  max-width: 360px;
+  line-height: 1.55;
+  margin: 0;
+}
+.ai-manager-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  background: linear-gradient(135deg, var(--portal-accent-solid) 0%, var(--portal-brand-green) 100%);
+  color: #fff;
+  border: 0;
+  padding: 10px 18px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity .15s, transform .1s;
+}
+.ai-manager-empty-cta:hover:not(:disabled) { opacity: 0.9; }
+.ai-manager-empty-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* =========================================================
    Credits badge (header)
    ========================================================= */
@@ -6722,6 +6778,31 @@ html.portal-theme-dark {
 /* Small spinner used inside the View / Download / Download-all buttons. */
 .bg-spin { animation: bg-spin-anim 0.9s linear infinite; }
 @keyframes bg-spin-anim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ----- Brand asset uploader (shared by Quiz + Strategist) ----- */
+.brand-asset-uploader { display: flex; flex-direction: column; gap: 8px; }
+.brand-asset-helper { font-size: 12px; color: var(--portal-text-subtle); line-height: 1.5; margin: 0; }
+.brand-asset-actions { display: flex; align-items: center; gap: 12px; }
+.brand-asset-pick { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; border: 1.5px dashed var(--portal-accent-tint); background: var(--portal-accent-soft); color: var(--portal-accent-solid); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .15s; }
+.brand-asset-pick:hover:not(:disabled) { border-style: solid; background: var(--portal-accent-solid); color: #fff; border-color: var(--portal-accent-solid); }
+.brand-asset-pick:disabled { opacity: 0.6; cursor: not-allowed; }
+.brand-asset-count { font-size: 11.5px; color: var(--portal-text-subtle); }
+.brand-asset-error { display: flex; align-items: center; gap: 6px; color: var(--portal-danger); font-size: 12px; }
+.brand-asset-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.brand-asset-chip { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--portal-surface); border: 1px solid var(--portal-border); border-radius: 10px; }
+.brand-asset-thumb { width: 36px; height: 36px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--portal-surface-muted); display: grid; place-items: center; color: var(--portal-text-subtle); }
+.brand-asset-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.brand-asset-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.brand-asset-meta a { font-size: 12.5px; color: var(--portal-text); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brand-asset-meta a:hover { color: var(--portal-accent-solid); text-decoration: underline; }
+.brand-asset-kind { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; color: var(--portal-text-subtle); text-transform: uppercase; letter-spacing: 0.05em; }
+.brand-asset-remove { width: 24px; height: 24px; border-radius: 50%; border: 0; background: transparent; color: var(--portal-text-subtle); cursor: pointer; display: grid; place-items: center; transition: all .15s; flex-shrink: 0; }
+.brand-asset-remove:hover { background: var(--portal-surface-muted); color: var(--portal-danger); }
+
+/* Strategist page panel that wraps the uploader so it reads as a single
+   card sitting above the chat. */
+.bg-strategist-assets { background: var(--portal-surface); border: 1px solid var(--portal-border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+.bg-strategist-assets .quiz-label { display: block; margin-bottom: 4px; font-weight: 600; color: var(--portal-text); }
 
 /* ----- CTAs ----- */
 .bg-cta-banner { background: var(--portal-accent-soft); border: 1px solid var(--portal-accent-tint); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }

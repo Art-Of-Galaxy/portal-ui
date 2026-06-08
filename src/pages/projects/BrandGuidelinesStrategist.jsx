@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, ChevronLeft } from "lucide-react";
 import AIStrategist from "../../components/strategist/AIStrategist";
 import BrandGuidelinesView from "./BrandGuidelinesView";
+import BrandAssetUploader from "../../components/brand/BrandAssetUploader";
 import { apiServices } from "../../services/apiServices";
 import { useLoading } from "../../context/LoadingContext";
 
@@ -48,6 +49,7 @@ function buildPayload(brief) {
     differentiation: brief.differentiation || "",
     extras: Array.isArray(brief.extras) ? brief.extras : [],
     additional_notes: brief.additional_notes || "",
+    brand_assets: Array.isArray(brief.brand_assets) ? brief.brand_assets : [],
   };
 }
 
@@ -57,6 +59,10 @@ export default function BrandGuidelinesStrategist() {
   const [result, setResult] = useState(null);
   const [briefForResult, setBriefForResult] = useState(null);
   const [error, setError] = useState("");
+  // Brand assets live OUTSIDE the LLM's brief — the conversation doesn't
+  // need to manage uploads, but at generate time we merge them in so the
+  // backend can feed them to fal.ai as reference images.
+  const [brandAssets, setBrandAssets] = useState([]);
   const { withLoading } = useLoading();
 
   async function handleReadyToGenerate(brief, session) {
@@ -67,8 +73,9 @@ export default function BrandGuidelinesStrategist() {
     setError("");
     setGenerating(true);
     try {
+      const mergedBrief = { ...brief, brand_assets: brandAssets };
       const res = await withLoading(
-        () => apiServices.generate_brand_guidelines({ form: buildPayload(brief) }),
+        () => apiServices.generate_brand_guidelines({ form: buildPayload(mergedBrief) }),
         BG_LOADER_MESSAGES,
         { label: "AI is building", intervalMs: 2400 }
       );
@@ -147,6 +154,16 @@ export default function BrandGuidelinesStrategist() {
       </button>
 
       {error ? <div className="strategist-page-error">{error}</div> : null}
+
+      <div className="bg-strategist-assets">
+        <BrandAssetUploader
+          value={brandAssets}
+          onChange={setBrandAssets}
+          projectName="Brand Guidelines Request"
+          label="Brand materials (optional)"
+          helper="Upload product photos, existing logos, or any reference assets. The strategist's brief will note them, and your social media kit will be conditioned on the product image so it shows up in the mockups."
+        />
+      </div>
 
       <AIStrategist
         service="brand_guidelines"
