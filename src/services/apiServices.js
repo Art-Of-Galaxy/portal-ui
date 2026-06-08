@@ -119,6 +119,47 @@ export const apiServices = {
         });
         return response;
     },
+    // Returns the rendered HTML doc as a string. The frontend wraps it in
+    // a blob URL so the iframe preview and the download anchor both work
+    // regardless of whether S3 was configured at generation time.
+    brand_guidelines_render_doc: async ({ spec, slug, brand_name, as_download = false }) => {
+        const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+        const userEmail = localStorage.getItem('user_email');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+        if (userEmail) headers['X-User-Email'] = userEmail;
+        const res = await fetch(`${API_URL}/brand-guidelines/render-doc`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ spec, slug, brand_name, as_download }),
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || `HTTP ${res.status}`);
+        }
+        return res.text();
+    },
+    // Returns the zip as a Blob. Caller is responsible for triggering the
+    // browser download (createObjectURL + <a download>).
+    brand_guidelines_zip: async ({ spec, brand_name, zip_name, docs, images }) => {
+        const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+        const userEmail = localStorage.getItem('user_email');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+        if (userEmail) headers['X-User-Email'] = userEmail;
+        const res = await fetch(`${API_URL}/brand-guidelines/zip`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ spec, brand_name, zip_name, docs, images }),
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || `HTTP ${res.status}`);
+        }
+        return res.blob();
+    },
     generate_rebranding: async ({ form, model }) => {
         const userEmail = localStorage.getItem('user_email') || undefined;
         const response = await fetchWithConfig('rebranding/generate', {

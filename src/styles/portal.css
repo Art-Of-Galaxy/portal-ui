@@ -6709,11 +6709,19 @@ html.portal-theme-dark {
 
 /* ----- Deliverable preview overlay ----- */
 .bg-deliv-overlay { position: fixed; inset: 0; background: rgba(11,16,32,0.78); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 32px; }
-.bg-deliv-overlay-frame { position: relative; width: min(960px, 100%); height: min(80vh, 720px); background: var(--portal-surface); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,0.4); }
-.bg-deliv-overlay-close { position: absolute; top: 12px; right: 14px; z-index: 2; width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--portal-surface); color: var(--portal-text); cursor: pointer; font-size: 20px; line-height: 1; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
-.bg-deliv-overlay-iframe { width: 100%; height: 100%; border: 0; background: #fff; }
-.bg-deliv-overlay-imagepack { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; height: 100%; overflow: auto; background: var(--portal-surface-muted); }
+.bg-deliv-overlay-frame { position: relative; width: min(960px, 100%); height: min(82vh, 760px); background: var(--portal-surface); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
+.bg-deliv-overlay-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 10px 14px; background: var(--portal-surface); border-bottom: 1px solid var(--portal-border); flex-shrink: 0; }
+.bg-deliv-overlay-open { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--portal-accent-solid); background: var(--portal-accent-soft); border: 1px solid var(--portal-accent-tint); padding: 6px 12px; border-radius: 6px; text-decoration: none; transition: all .15s; }
+.bg-deliv-overlay-open:hover { background: var(--portal-accent-solid); color: #fff; border-color: var(--portal-accent-solid); }
+.bg-deliv-overlay-close { width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--portal-surface-muted); color: var(--portal-text); cursor: pointer; font-size: 20px; line-height: 1; display: grid; place-items: center; transition: background .15s; }
+.bg-deliv-overlay-close:hover { background: var(--portal-border); }
+.bg-deliv-overlay-iframe { width: 100%; flex: 1; border: 0; background: #fff; }
+.bg-deliv-overlay-imagepack { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; flex: 1; overflow: auto; background: var(--portal-surface-muted); }
 .bg-deliv-overlay-imagepack img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; background: var(--portal-surface); }
+
+/* Small spinner used inside the View / Download / Download-all buttons. */
+.bg-spin { animation: bg-spin-anim 0.9s linear infinite; }
+@keyframes bg-spin-anim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* ----- CTAs ----- */
 .bg-cta-banner { background: var(--portal-accent-soft); border: 1px solid var(--portal-accent-tint); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }

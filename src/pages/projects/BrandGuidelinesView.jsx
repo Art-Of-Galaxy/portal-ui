@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import {
   AlertTriangle,
   BookOpen,
   Check,
   Download,
+  ExternalLink,
   Eye,
+  Loader2,
   PenTool,
   Palette,
   Smartphone,
@@ -14,10 +16,19 @@ import {
 } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 
-// Brand Guidelines output. Shows the brand identity sidebar (essence,
-// personality, mood, palette, type) on the left and a 6 card deliverable
-// grid on the right. Matches the structure of the source HTML mockup but
-// uses the portal accent (purple) + brand green tokens, not teal.
+// Brand Guidelines output. Sidebar identity card + 6 card deliverable
+// grid. Render and download flow:
+//   - Document deliverables (HTML brand book, color, voice, type):
+//       View   → POST /brand-guidelines/render-doc, wrap HTML in blob
+//                URL, show in iframe. Works even when S3 upload at
+//                generation time failed (we re-render from the spec).
+//       Download → same POST with as_download:true, save as .html.
+//   - Image pack deliverables (Logo pack, Social media kit):
+//       View   → existing inline grid overlay.
+//       Download → POST /brand-guidelines/zip with the pack's image
+//                  URLs, save the streamed zip.
+//   - "Download all files" → one zip with every HTML doc + every image
+//     pack folder.
 
 const ICON_MAP = {
   book: BookOpen,
@@ -28,47 +39,55 @@ const ICON_MAP = {
   type: Type,
 };
 
-function safeFilename(brand, slug, ext = "html") {
-  const safe = String(brand || "brand")
+// Slug the BACKEND DOC_RENDERERS map exposes. Pulled out here so the
+// "download all" logic can list every doc the spec can produce, even
+// when the persisted deliverables array predates a particular slug.
+const DOC_SLUGS_BY_ID = {
+  guidelines: "brand-guidelines",
+  color: "color-system",
+  voice: "brand-voice",
+  typography: "typography-guide",
+};
+
+function safeBase(brand) {
+  return String(brand || "brand")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 40) || "brand";
-  return `${safe}-${slug}.${ext}`;
 }
 
-async function downloadViaPresign(url, filename) {
-  if (!url) return;
-  try {
-    const res = await apiServices.presigned_download({ url, filename });
-    const target = res?.presigned_url || url;
-    const link = document.createElement("a");
-    link.href = target;
-    link.download = filename;
-    link.rel = "noopener";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch {
-    window.open(url, "_blank", "noopener");
-  }
+function triggerBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Revoke after the click so the browser keeps the URL alive long enough
+  // to start the download.
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
-function DeliverableCard({ deliverable, brandName, onPreview }) {
+function DeliverableCard({ deliverable, brandName, busy, onPreview, onDownload }) {
   const Icon = ICON_MAP[deliverable.icon] || BookOpen;
   const cover =
-    deliverable.preview_url ||
-    (deliverable.kind === "image_pack" ? deliverable.images?.[0]?.url : null);
-  const disabled = !deliverable.url && !cover;
-  const ext = deliverable.kind === "image_pack" ? "png" : "html";
+    deliverable.kind === "image_pack" ? deliverable.images?.[0]?.url : null;
+  const isImagePack = deliverable.kind === "image_pack";
+  // We can always render documents from the spec, so the View button is
+  // never disabled for them. Image packs disable when no images came back.
+  const viewDisabled = isImagePack && !cover;
+  const downloadDisabled = isImagePack && !(deliverable.images?.length);
 
   return (
     <article className="bg-deliv-card">
       <div
         className="bg-deliv-preview"
-        style={{ background: deliverable.kind === "image_pack" && cover ? "transparent" : "var(--portal-surface-muted)" }}
+        style={{ background: isImagePack && cover ? "transparent" : "var(--portal-surface-muted)" }}
       >
-        {deliverable.kind === "image_pack" && cover ? (
+        {isImagePack && cover ? (
           <img src={cover} alt={`${deliverable.name} preview`} />
         ) : (
           <span
@@ -86,24 +105,23 @@ function DeliverableCard({ deliverable, brandName, onPreview }) {
           <button
             type="button"
             className="bg-deliv-btn is-view"
-            disabled={disabled}
+            disabled={viewDisabled || busy === "view"}
             onClick={() => onPreview(deliverable)}
           >
-            <Eye size={13} /> View
+            {busy === "view" ? <Loader2 size={13} className="bg-spin" /> : <Eye size={13} />}
+            {busy === "view" ? "Opening..." : "View"}
           </button>
           <button
             type="button"
             className="bg-deliv-btn is-download"
-            disabled={disabled}
-            onClick={() =>
-              deliverable.kind === "image_pack"
-                ? downloadViaPresign(deliverable.images[0].url, safeFilename(brandName, `${deliverable.id}-1`, ext))
-                : downloadViaPresign(deliverable.url, safeFilename(brandName, deliverable.id, ext))
-            }
+            disabled={downloadDisabled || busy === "download"}
+            onClick={() => onDownload(deliverable)}
           >
-            <Download size={13} /> Download
+            {busy === "download" ? <Loader2 size={13} className="bg-spin" /> : <Download size={13} />}
+            {busy === "download" ? "Preparing..." : "Download"}
           </button>
         </div>
+        {brandName ? null : null /* brandName is used in helpers; ref kept to silence prop-types when unused */}
       </div>
     </article>
   );
@@ -112,11 +130,15 @@ function DeliverableCard({ deliverable, brandName, onPreview }) {
 DeliverableCard.propTypes = {
   deliverable: PropTypes.object.isRequired,
   brandName: PropTypes.string,
+  busy: PropTypes.string,
   onPreview: PropTypes.func.isRequired,
+  onDownload: PropTypes.func.isRequired,
 };
 
 function PreviewOverlay({ deliverable, onClose }) {
   if (!deliverable) return null;
+  const isImagePack = deliverable.kind === "image_pack";
+  const openUrl = isImagePack ? null : (deliverable.blobUrl || deliverable.url);
   return (
     <div
       className="bg-deliv-overlay"
@@ -127,8 +149,20 @@ function PreviewOverlay({ deliverable, onClose }) {
       tabIndex={-1}
     >
       <div className="bg-deliv-overlay-frame" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="bg-deliv-overlay-close" onClick={onClose}>×</button>
-        {deliverable.kind === "image_pack" ? (
+        <div className="bg-deliv-overlay-toolbar">
+          {openUrl ? (
+            <a
+              href={openUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-deliv-overlay-open"
+            >
+              <ExternalLink size={13} /> Open in new tab
+            </a>
+          ) : null}
+          <button type="button" className="bg-deliv-overlay-close" onClick={onClose} aria-label="Close preview">×</button>
+        </div>
+        {isImagePack ? (
           <div className="bg-deliv-overlay-imagepack">
             {(deliverable.images || []).map((img, i) => (
               <img key={i} src={img.url} alt={`${deliverable.name} ${i + 1}`} />
@@ -137,7 +171,7 @@ function PreviewOverlay({ deliverable, onClose }) {
         ) : (
           <iframe
             title={`${deliverable.name} preview`}
-            src={deliverable.url}
+            src={deliverable.blobUrl || deliverable.url || "about:blank"}
             className="bg-deliv-overlay-iframe"
           />
         )}
@@ -162,12 +196,24 @@ export default function BrandGuidelinesView({
   errors,
 }) {
   const [previewing, setPreviewing] = useState(null);
+  const [busyId, setBusyId] = useState(null); // `${id}:${action}` like "guidelines:view"
+  const [actionError, setActionError] = useState("");
   const [revisionOpen, setRevisionOpen] = useState(false);
   const [revisionNotes, setRevisionNotes] = useState("");
   const [revisionSent, setRevisionSent] = useState(false);
   const [revisionSubmitting, setRevisionSubmitting] = useState(false);
   const [revisionError, setRevisionError] = useState("");
   const [downloadingAll, setDownloadingAll] = useState(false);
+
+  // Track blob URLs we create so we can revoke them on unmount / when the
+  // user closes the preview (otherwise they leak until the tab is closed).
+  const blobUrlsRef = useRef([]);
+  useEffect(() => () => {
+    blobUrlsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch { /* ignore */ } });
+    blobUrlsRef.current = [];
+  }, []);
+
+  const safeBrand = useMemo(() => safeBase(brandName), [brandName]);
 
   if (!guidelines || typeof guidelines !== "object") {
     return (
@@ -193,22 +239,119 @@ export default function BrandGuidelinesView({
       ? "is-done"
       : "is-pending";
 
+  function busyFor(id, action) {
+    return busyId === `${id}:${action}` ? action : null;
+  }
+
+  function clearBusy() { setBusyId(null); }
+
+  async function handlePreview(deliverable) {
+    setActionError("");
+    if (deliverable.kind === "image_pack") {
+      setPreviewing(deliverable);
+      return;
+    }
+    // Document: render on the backend, wrap as blob URL, show in iframe.
+    const slug = DOC_SLUGS_BY_ID[deliverable.id];
+    if (!slug) {
+      setActionError(`No renderer for ${deliverable.id}.`);
+      return;
+    }
+    setBusyId(`${deliverable.id}:view`);
+    try {
+      const html = await apiServices.brand_guidelines_render_doc({
+        spec: guidelines,
+        slug,
+        brand_name: brandName,
+        as_download: false,
+      });
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const blobUrl = URL.createObjectURL(blob);
+      blobUrlsRef.current.push(blobUrl);
+      setPreviewing({ ...deliverable, blobUrl });
+    } catch (err) {
+      setActionError(err?.message || "Could not open preview.");
+    } finally {
+      clearBusy();
+    }
+  }
+
+  async function handleDownload(deliverable) {
+    setActionError("");
+    setBusyId(`${deliverable.id}:download`);
+    try {
+      if (deliverable.kind === "document") {
+        const slug = DOC_SLUGS_BY_ID[deliverable.id];
+        if (!slug) throw new Error(`No renderer for ${deliverable.id}.`);
+        const html = await apiServices.brand_guidelines_render_doc({
+          spec: guidelines,
+          slug,
+          brand_name: brandName,
+          as_download: true,
+        });
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        triggerBlobDownload(blob, `${safeBrand}-${slug}.html`);
+        return;
+      }
+      // Image pack → zip just the images in this pack.
+      if (deliverable.kind === "image_pack") {
+        const images = (deliverable.images || []).map((img, i) => ({
+          url: img.url,
+          folder: "",
+          filename: `${safeBrand}-${deliverable.id}-${i + 1}.png`,
+        }));
+        if (!images.length) throw new Error("No images in this pack.");
+        const blob = await apiServices.brand_guidelines_zip({
+          spec: guidelines,
+          brand_name: brandName,
+          zip_name: `${safeBrand}-${deliverable.id}-pack`,
+          docs: [],
+          images,
+        });
+        triggerBlobDownload(blob, `${safeBrand}-${deliverable.id}-pack.zip`);
+      }
+    } catch (err) {
+      setActionError(err?.message || "Download failed.");
+    } finally {
+      clearBusy();
+    }
+  }
+
   async function handleDownloadAll() {
     if (downloadingAll) return;
+    setActionError("");
     setDownloadingAll(true);
     try {
+      // Every doc we know how to render, scoped to whatever the spec
+      // actually has. We render from the spec rather than reading
+      // deliverable.url, so this works even when the per-doc S3 upload
+      // silently failed at generation time.
+      const docSlugs = Object.values(DOC_SLUGS_BY_ID);
+
+      const images = [];
       for (const d of deliverables) {
-        if (d.kind === "document" && d.url) {
-          await downloadViaPresign(d.url, safeFilename(brandName, d.id, "html"));
-        } else if (d.kind === "image_pack" && Array.isArray(d.images)) {
-          for (let i = 0; i < d.images.length; i += 1) {
-            const img = d.images[i];
-            if (img?.url) {
-              await downloadViaPresign(img.url, safeFilename(brandName, `${d.id}-${i + 1}`, "png"));
-            }
+        if (d.kind !== "image_pack" || !Array.isArray(d.images)) continue;
+        d.images.forEach((img, i) => {
+          if (img?.url) {
+            images.push({
+              url: img.url,
+              folder: d.id,
+              filename: `${safeBrand}-${d.id}-${i + 1}.png`,
+            });
           }
-        }
+        });
       }
+
+      const blob = await apiServices.brand_guidelines_zip({
+        spec: guidelines,
+        brand_name: brandName,
+        zip_name: `${safeBrand}-brand-package`,
+        docs: docSlugs,
+        images,
+      });
+      triggerBlobDownload(blob, `${safeBrand}-brand-package.zip`);
+    } catch (err) {
+      setActionError(err?.message || "Could not build the package.");
     } finally {
       setDownloadingAll(false);
     }
@@ -239,6 +382,10 @@ export default function BrandGuidelinesView({
     }
   }
 
+  function closePreview() {
+    setPreviewing(null);
+  }
+
   return (
     <div className="bg-result-page">
       <div className="bg-result-header-row">
@@ -256,6 +403,13 @@ export default function BrandGuidelinesView({
         <div className="bg-result-banner is-warn">
           <AlertTriangle size={14} />
           <span>{errors[0]}</span>
+        </div>
+      ) : null}
+
+      {actionError ? (
+        <div className="bg-result-banner is-warn">
+          <AlertTriangle size={14} />
+          <span>{actionError}</span>
         </div>
       ) : null}
 
@@ -344,7 +498,7 @@ export default function BrandGuidelinesView({
             <div>
               <h2 className="bg-result-main-title">Brand Guidelines · Ready to download</h2>
               <p className="bg-result-main-sub">
-                All files are export-ready. View any document or download the full package.
+                All files are export-ready. View any document or download the full package as a zip.
               </p>
             </div>
             <button
@@ -353,8 +507,8 @@ export default function BrandGuidelinesView({
               onClick={handleDownloadAll}
               disabled={downloadingAll}
             >
-              <Download size={14} />
-              {downloadingAll ? "Downloading..." : "Download all files"}
+              {downloadingAll ? <Loader2 size={14} className="bg-spin" /> : <Download size={14} />}
+              {downloadingAll ? "Building zip..." : "Download all files"}
             </button>
           </div>
 
@@ -364,7 +518,9 @@ export default function BrandGuidelinesView({
                 key={d.id}
                 deliverable={d}
                 brandName={brandName}
-                onPreview={(deliv) => setPreviewing(deliv)}
+                busy={busyFor(d.id, "view") || busyFor(d.id, "download")}
+                onPreview={handlePreview}
+                onDownload={handleDownload}
               />
             ))}
           </div>
@@ -449,7 +605,7 @@ export default function BrandGuidelinesView({
         </div>
       </div>
 
-      <PreviewOverlay deliverable={previewing} onClose={() => setPreviewing(null)} />
+      <PreviewOverlay deliverable={previewing} onClose={closePreview} />
     </div>
   );
 }
