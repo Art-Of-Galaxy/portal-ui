@@ -394,7 +394,7 @@ export default function BrandGuidelinesView({
           <div className="bg-result-meta-row">
             <span className="bg-result-badge is-category">Branding &amp; Design</span>
             <span className={`bg-result-badge ${statusCls}`}>{statusLabel || "Done"}</span>
-            {tagline ? <span className="bg-result-badge is-muted">{tagline}</span> : null}
+            {/* {tagline ? <span className="bg-result-badge is-muted">{tagline}</span> : null} */}
           </div>
         </div>
       </div>
