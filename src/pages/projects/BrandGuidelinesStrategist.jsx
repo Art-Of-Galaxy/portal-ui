@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, ChevronLeft } from "lucide-react";
 import AIStrategist from "../../components/strategist/AIStrategist";
 import BrandGuidelinesView from "./BrandGuidelinesView";
-import BrandAssetUploader from "../../components/brand/BrandAssetUploader";
 import { apiServices } from "../../services/apiServices";
 import { useLoading } from "../../context/LoadingContext";
 
@@ -155,16 +154,6 @@ export default function BrandGuidelinesStrategist() {
 
       {error ? <div className="strategist-page-error">{error}</div> : null}
 
-      <div className="bg-strategist-assets">
-        <BrandAssetUploader
-          value={brandAssets}
-          onChange={setBrandAssets}
-          projectName="Brand Guidelines Request"
-          label="Brand materials (optional)"
-          helper="Upload product photos, existing logos, or any reference assets. The strategist's brief will note them, and your social media kit will be conditioned on the product image so it shows up in the mockups."
-        />
-      </div>
-
       <AIStrategist
         service="brand_guidelines"
         checklistSteps={BG_CHECKLIST}
@@ -173,6 +162,10 @@ export default function BrandGuidelinesStrategist() {
         generateLabel={generating ? "Building..." : "I'm ready, build my guidelines"}
         generating={generating}
         requiredFields={["brand_name", "product_description"]}
+        enableAttachments
+        onAttachmentsChange={setBrandAssets}
+        attachmentProjectName="Brand Guidelines Request"
+        attachmentServiceType="brand_guidelines"
       />
     </div>
   );

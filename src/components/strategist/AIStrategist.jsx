@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { Check, Loader2, RefreshCw, Sparkles, Maximize2, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Check, Loader2, RefreshCw, Sparkles, Maximize2, ChevronLeft, ChevronRight, X, FileText } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 
 // Brand-aligned SVG asset pack for the AI Strategist chat surface.
@@ -71,6 +71,14 @@ function AIStrategist({
      "last session" heuristic). The AI Manager uses this to switch
      between multiple parallel conversations. */
   activeSessionId = null,
+  /* Composer attachments: enables the paperclip in the composer, lets
+     the user upload product photos / brand materials right inside the
+     chat, and emits the full list to the host whenever it changes. The
+     host merges these into the brief at generate time. */
+  enableAttachments = false,
+  onAttachmentsChange,
+  attachmentProjectName = "AI Strategist Request",
+  attachmentServiceType = "strategist",
 }, ref) {
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -83,6 +91,61 @@ function AIStrategist({
   const [loadingSession, setLoadingSession] = useState(true);
   const [error, setError] = useState("");
   const scrollRef = useRef(null);
+
+  // ----- Composer attachments (paperclip in the input) -----
+  // Files live in component state and are reported up via
+  // onAttachmentsChange. We don't persist them to the strategist session
+  // because the LLM doesn't need to manage them; the host page merges
+  // them into the brief at generate time.
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentUploading, setAttachmentUploading] = useState(false);
+  const [attachmentError, setAttachmentError] = useState("");
+  const attachmentInputRef = useRef(null);
+
+  const handleAttachmentPick = useCallback(async (event) => {
+    const picked = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!picked.length) return;
+    setAttachmentUploading(true);
+    setAttachmentError("");
+    try {
+      const next = [...attachments];
+      for (const file of picked) {
+        const res = await apiServices.upload_file(file, {
+          projectName: attachmentProjectName,
+          category: "Branding & Design",
+          serviceType: attachmentServiceType,
+        });
+        const url = res?.file?.url || res?.url;
+        if (!res?.success || !url) {
+          throw new Error(res?.message || `Upload failed for ${file.name}`);
+        }
+        const isImage = String(file.type || "").startsWith("image/")
+          || /\.(png|jpe?g|webp|gif|bmp|svg|heic)$/i.test(file.name || "");
+        next.push({
+          url,
+          name: file.name,
+          kind: isImage ? "image" : "file",
+          mime: file.type || "",
+        });
+      }
+      setAttachments(next);
+      if (typeof onAttachmentsChange === "function") onAttachmentsChange(next);
+    } catch (err) {
+      setAttachmentError(err?.message || "Upload failed");
+    } finally {
+      setAttachmentUploading(false);
+    }
+  }, [attachments, attachmentProjectName, attachmentServiceType, onAttachmentsChange]);
+
+  const handleAttachmentRemove = useCallback((idx) => {
+    setAttachments((prev) => {
+      const next = prev.slice();
+      next.splice(idx, 1);
+      if (typeof onAttachmentsChange === "function") onAttachmentsChange(next);
+      return next;
+    });
+  }, [onAttachmentsChange]);
 
   // Load or create a session on mount. Three modes:
   //   1. activeSessionId set    -> load that session
@@ -463,17 +526,61 @@ function AIStrategist({
           {error ? <div className="strategist-error">{error}</div> : null}
         </div>
 
+        {/* -------- Composer attachments (chip strip above the input) -------- */}
+        {enableAttachments && (attachments.length || attachmentError) ? (
+          <div className="strategist-composer-attachments">
+            {attachments.map((f, i) => (
+              <span key={`${f.url}-${i}`} className="strategist-composer-chip">
+                {f.kind === "image" ? (
+                  <span className="strategist-composer-chip-thumb">
+                    <img src={f.url} alt="" referrerPolicy="no-referrer" />
+                  </span>
+                ) : (
+                  <span className="strategist-composer-chip-thumb is-file">
+                    <FileText size={11} />
+                  </span>
+                )}
+                <span className="strategist-composer-chip-name" title={f.name}>{f.name}</span>
+                <button
+                  type="button"
+                  className="strategist-composer-chip-remove"
+                  aria-label={`Remove ${f.name}`}
+                  onClick={() => handleAttachmentRemove(i)}
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            ))}
+            {attachmentError ? (
+              <span className="strategist-composer-attach-error">{attachmentError}</span>
+            ) : null}
+          </div>
+        ) : null}
+
         {/* -------- Composer -------- */}
         <form className="strategist-composer" onSubmit={handleSubmit}>
           <button
             type="button"
             className="strategist-composer-icon"
-            aria-label="Attach a file"
-            title="Attach (coming soon)"
-            disabled
+            aria-label={enableAttachments ? "Attach a file" : "Attach (coming soon)"}
+            title={enableAttachments ? "Attach product photos or brand materials" : "Attach (coming soon)"}
+            onClick={enableAttachments ? () => attachmentInputRef.current?.click() : undefined}
+            disabled={!enableAttachments || attachmentUploading || sending || loadingSession}
           >
-            <img src={aiAttachIcon} alt="" />
+            {attachmentUploading
+              ? <Loader2 size={16} className="strategist-spin" />
+              : <img src={aiAttachIcon} alt="" />}
           </button>
+          {enableAttachments ? (
+            <input
+              ref={attachmentInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              multiple
+              onChange={handleAttachmentPick}
+              style={{ display: "none" }}
+            />
+          ) : null}
           <input
             id="strategist-composer"
             className="strategist-composer-input"
@@ -741,6 +848,10 @@ AIStrategistForwarded.propTypes = {
   requiredFields: PropTypes.arrayOf(PropTypes.string),
   chatOnly: PropTypes.bool,
   activeSessionId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  enableAttachments: PropTypes.bool,
+  onAttachmentsChange: PropTypes.func,
+  attachmentProjectName: PropTypes.string,
+  attachmentServiceType: PropTypes.string,
 };
 
 export default AIStrategistForwarded;

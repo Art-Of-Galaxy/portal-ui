@@ -5450,6 +5450,73 @@ html.portal-theme-dark {
   box-shadow: var(--portal-shadow-sm);
 }
 
+/* Chip strip rendered just above the composer when the user has
+   attached files via the paperclip. Sits flush with the composer
+   (same horizontal margin) so the two read as one input region. */
+.strategist-composer-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 1.2rem -0.2rem;
+  padding: 4px 0;
+}
+.strategist-composer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 3px 4px;
+  background: var(--portal-surface-muted);
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--portal-text);
+  max-width: 220px;
+}
+.strategist-composer-chip-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--portal-surface);
+  display: grid;
+  place-items: center;
+  color: var(--portal-text-subtle);
+}
+.strategist-composer-chip-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.strategist-composer-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+.strategist-composer-chip-remove {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--portal-text-subtle);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.strategist-composer-chip-remove:hover {
+  background: var(--portal-surface);
+  color: var(--portal-danger);
+}
+.strategist-composer-attach-error {
+  font-size: 11.5px;
+  color: var(--portal-danger);
+  padding: 4px 6px;
+}
+
 .strategist-composer-input {
   flex: 1;
   border: 0;
@@ -6799,10 +6866,6 @@ html.portal-theme-dark {
 .brand-asset-remove { width: 24px; height: 24px; border-radius: 50%; border: 0; background: transparent; color: var(--portal-text-subtle); cursor: pointer; display: grid; place-items: center; transition: all .15s; flex-shrink: 0; }
 .brand-asset-remove:hover { background: var(--portal-surface-muted); color: var(--portal-danger); }
 
-/* Strategist page panel that wraps the uploader so it reads as a single
-   card sitting above the chat. */
-.bg-strategist-assets { background: var(--portal-surface); border: 1px solid var(--portal-border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
-.bg-strategist-assets .quiz-label { display: block; margin-bottom: 4px; font-weight: 600; color: var(--portal-text); }
 
 /* ----- CTAs ----- */
 .bg-cta-banner { background: var(--portal-accent-soft); border: 1px solid var(--portal-accent-tint); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
