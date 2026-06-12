@@ -13,6 +13,12 @@ import BrandingDesign from "../pages/projects/BrandingDesign";
 import BrandGuidelines from "../pages/projects/BrandGuidelines";
 import BrandGuidelinesStrategist from "../pages/projects/BrandGuidelinesStrategist";
 import BrandGuidelinesQuiz from "../pages/projects/BrandGuidelinesQuiz";
+import PrintingDesign from "../pages/projects/PrintingDesign";
+import PrintingDesignStrategist from "../pages/projects/PrintingDesignStrategist";
+import PrintingDesignQuiz from "../pages/projects/PrintingDesignQuiz";
+import PackagingDesign from "../pages/projects/PackagingDesign";
+import PackagingDesignStrategist from "../pages/projects/PackagingDesignStrategist";
+import PackagingDesignQuiz from "../pages/projects/PackagingDesignQuiz";
 import RebrandingForm from "../pages/projects/RebrandingForm";
 import EcommerceMockupsForm from "../pages/projects/EcommerceMockupsForm";
 import LogoDesign from "../pages/projects/LogoDesign";
@@ -74,9 +80,13 @@ const AppRoutes = () => {
           <Route path="/new-projects/branding-design/brand-guidelines" element={withLayout(BrandGuidelines)} />
           <Route path="/new-projects/branding-design/brand-guidelines/strategist" element={withLayout(BrandGuidelinesStrategist)} />
           <Route path="/new-projects/branding-design/brand-guidelines/quiz" element={withLayout(BrandGuidelinesQuiz)} />
-          <Route path="/new-projects/branding-design/printing" element={withLayout(ComingSoon, { title: "Printing Design", description: "Print-ready collateral powered by GPT and Claude Sonnet. Tool flow coming soon." })} />
+          <Route path="/new-projects/branding-design/printing" element={withLayout(PrintingDesign)} />
+          <Route path="/new-projects/branding-design/printing/strategist" element={withLayout(PrintingDesignStrategist)} />
+          <Route path="/new-projects/branding-design/printing/quiz" element={withLayout(PrintingDesignQuiz)} />
           <Route path="/new-projects/branding-design/rebranding" element={withLayout(RebrandingForm)} />
-          <Route path="/new-projects/branding-design/packaging" element={withLayout(ComingSoon, { title: "Packaging Design", description: "Production-ready packaging concepts. Tool flow coming soon." })} />
+          <Route path="/new-projects/branding-design/packaging" element={withLayout(PackagingDesign)} />
+          <Route path="/new-projects/branding-design/packaging/strategist" element={withLayout(PackagingDesignStrategist)} />
+          <Route path="/new-projects/branding-design/packaging/quiz" element={withLayout(PackagingDesignQuiz)} />
           <Route path="/new-projects/branding-design/ecommerce-mockups" element={withLayout(EcommerceMockupsForm)} />
 
           {/* Other 7 domain expert agents (placeholders) */}

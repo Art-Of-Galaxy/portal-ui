@@ -187,6 +187,24 @@ export const apiServices = {
         });
         return response;
     },
+    generate_printing_design: async ({ form, model }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const response = await fetchWithConfig('printing-design/generate', {
+            method: 'POST',
+            body: { form, model, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
+    },
+    generate_packaging_design: async ({ form, model }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        const response = await fetchWithConfig('packaging-design/generate', {
+            method: 'POST',
+            body: { form, model, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response;
+    },
     generate_ugc_ad: async ({ form }) => {
         const userEmail = localStorage.getItem('user_email') || undefined;
         const response = await fetchWithConfig('ugc-ads/generate', {

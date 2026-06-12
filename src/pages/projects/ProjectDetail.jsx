@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, FolderKanban, Trash2 } from "lucide-react";
 import { apiServices } from "../../services/apiServices";
 import BrandGuidelinesView from "./BrandGuidelinesView";
+import PrintingDesignView from "./PrintingDesignView";
+import PackagingDesignView from "./PackagingDesignView";
 import RebrandingView from "./RebrandingView";
 import EcommerceMockupsView from "./EcommerceMockupsView";
 import LogoDesignView from "./LogoDesignView";
@@ -140,6 +142,30 @@ export default function ProjectDetail() {
         />
       );
     }
+    if (serviceType === "printing_design") {
+      const briefSpec = output?.brief || output;
+      return (
+        <PrintingDesignView
+          brief={briefSpec}
+          brandName={project.project_name}
+          description={input.purpose || input.brand_name}
+          statusLabel={project.status_label}
+          projectId={project.id}
+        />
+      );
+    }
+    if (serviceType === "packaging_design") {
+      const briefSpec = output?.brief || output;
+      return (
+        <PackagingDesignView
+          brief={briefSpec}
+          brandName={project.project_name}
+          description={input.product_desc || input.product_name}
+          statusLabel={project.status_label}
+          projectId={project.id}
+        />
+      );
+    }
     if (serviceType === "rebranding") {
       return (
         <RebrandingView
@@ -216,7 +242,7 @@ export default function ProjectDetail() {
           with category / sub-service / status / brand name, so the
           duplicate project header is hidden for them. Anything else
           (raw JSON output, future services) keeps the project header. */}
-      {!["logo_design", "brand_guidelines", "rebranding", "ecommerce_mockups"].includes(serviceType) ? (
+      {!["logo_design", "brand_guidelines", "printing_design", "packaging_design", "rebranding", "ecommerce_mockups"].includes(serviceType) ? (
         <div className="proj-detail-head">
           <div className="proj-detail-head-info">
             <h1>{project.project_name}</h1>
