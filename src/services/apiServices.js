@@ -196,6 +196,64 @@ export const apiServices = {
         });
         return response;
     },
+    // ---------- Social Media Studio ----------
+    social_media_generate: async ({ brief, model }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('social-media/generate', {
+            method: 'POST',
+            body: { brief, model, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    social_media_save: async (payload) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('social-media/save', {
+            method: 'POST',
+            body: { ...payload, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    social_media_publish_now: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`social-media/${id}/publish`, {
+            method: 'POST',
+            body: { user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    social_media_library: async ({ filter = 'all' } = {}) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = new URLSearchParams();
+        qs.set('filter', filter);
+        if (userEmail) qs.set('user_email', userEmail);
+        return fetchWithConfig(`social-media/library?${qs.toString()}`, { method: 'GET' });
+    },
+    social_media_stats: async () => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`social-media/stats${qs}`, { method: 'GET' });
+    },
+
+    // ---------- Social platform connections (Meta + Google) ----------
+    social_connections_list: async () => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`social-connections${qs}`, { method: 'GET' });
+    },
+    social_connections_start: async ({ platform }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`social-connections/start/${platform}`, {
+            method: 'POST',
+            body: { user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    social_connections_disconnect: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`social-connections/${id}${qs}`, { method: 'DELETE' });
+    },
+
     generate_packaging_design: async ({ form, model }) => {
         const userEmail = localStorage.getItem('user_email') || undefined;
         const response = await fetchWithConfig('packaging-design/generate', {

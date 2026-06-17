@@ -184,9 +184,9 @@ export default function ProjectDetail() {
           mockups={output}
           productName={project.project_name}
           description={input.product_description}
-          tagline={input.highlight_features}
           statusLabel={project.status_label}
           projectId={project.id}
+          imageModel={output?.image_model || ""}
         />
       );
     }

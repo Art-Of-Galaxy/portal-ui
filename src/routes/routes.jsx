@@ -20,7 +20,14 @@ import PackagingDesign from "../pages/projects/PackagingDesign";
 import PackagingDesignStrategist from "../pages/projects/PackagingDesignStrategist";
 import PackagingDesignQuiz from "../pages/projects/PackagingDesignQuiz";
 import RebrandingForm from "../pages/projects/RebrandingForm";
-import EcommerceMockupsForm from "../pages/projects/EcommerceMockupsForm";
+import EcommerceMockups from "../pages/projects/EcommerceMockups";
+import EcommerceMockupsStrategist from "../pages/projects/EcommerceMockupsStrategist";
+import EcommerceMockupsQuiz from "../pages/projects/EcommerceMockupsQuiz";
+import SocialMediaHub from "../pages/projects/social/SocialMediaHub";
+import SocialMediaCreate from "../pages/projects/social/SocialMediaCreate";
+import SocialConnections from "../pages/projects/social/SocialConnections";
+import PrivacyPolicy from "../pages/legal/PrivacyPolicy";
+import DataDeletion from "../pages/legal/DataDeletion";
 import LogoDesign from "../pages/projects/LogoDesign";
 import LogoDesignStrategist from "../pages/projects/LogoDesignStrategist";
 import LogoDesignQuiz from "../pages/projects/LogoDesignQuiz";
@@ -61,6 +68,11 @@ const AppRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/forgot-password/sent" element={<ForgotPasswordSent />} />
 
+        {/* Public legal pages. Must NOT be wrapped in <ProtectedRoute> —
+            Meta and Google reviewers crawl these without logging in. */}
+        <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+        <Route path="/legal/data-deletion" element={<DataDeletion />} />
+
         {/* Onboarding-flow create project (keep separate from portal "New Projects") */}
         <Route path="/create-project" element={<CreateProjectSelection />} />
 
@@ -87,12 +99,16 @@ const AppRoutes = () => {
           <Route path="/new-projects/branding-design/packaging" element={withLayout(PackagingDesign)} />
           <Route path="/new-projects/branding-design/packaging/strategist" element={withLayout(PackagingDesignStrategist)} />
           <Route path="/new-projects/branding-design/packaging/quiz" element={withLayout(PackagingDesignQuiz)} />
-          <Route path="/new-projects/branding-design/ecommerce-mockups" element={withLayout(EcommerceMockupsForm)} />
+          <Route path="/new-projects/branding-design/ecommerce-mockups" element={withLayout(EcommerceMockups)} />
+          <Route path="/new-projects/branding-design/ecommerce-mockups/strategist" element={withLayout(EcommerceMockupsStrategist)} />
+          <Route path="/new-projects/branding-design/ecommerce-mockups/quiz" element={withLayout(EcommerceMockupsQuiz)} />
 
           {/* Other 7 domain expert agents (placeholders) */}
           <Route path="/new-projects/web-solutions" element={withLayout(ComingSoon, { title: "Web Solutions", description: "Website development, e-commerce, landing pages, SEO, web apps and remodels. Coming soon." })} />
           <Route path="/new-projects/marketing" element={withLayout(ComingSoon, { title: "Marketing Consulting", description: "Strategy, positioning and growth playbooks. Coming soon." })} />
-          <Route path="/new-projects/social" element={withLayout(ComingSoon, { title: "Social Media Management", description: "Content planning, scheduling and analytics. Coming soon." })} />
+          <Route path="/new-projects/social" element={withLayout(SocialMediaHub)} />
+          <Route path="/new-projects/social/create" element={withLayout(SocialMediaCreate)} />
+          <Route path="/new-projects/social/connections" element={withLayout(SocialConnections)} />
           <Route path="/new-projects/email" element={withLayout(ComingSoon, { title: "Email Marketing", description: "Lifecycle automations, broadcasts and template design. Coming soon." })} />
           <Route path="/new-projects/campaigns" element={withLayout(ComingSoon, { title: "B2B & B2C Campaigns", description: "Multi-channel campaign strategy and creative. Coming soon." })} />
           <Route path="/new-projects/ai-integrations" element={withLayout(ComingSoon, { title: "AI Integrations & Automations", description: "Voice agents, chatbots and workflow automation. Coming soon." })} />
