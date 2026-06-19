@@ -38,9 +38,20 @@ export default function ShopifyConnections() {
     const shop = params.get("shop");
     if (!status) return;
     if (status === "ok") setBanner({ kind: "success", text: `Connected ${shop || "your store"}.` });
-    else if (status === "error") setBanner({ kind: "error", text: `Connection failed: ${params.get("error") || "unknown"}` });
+    else if (status === "error") {
+      const code = params.get("error") || "unknown";
+      const sub = params.get("sub");
+      const HUMAN = {
+        bad_state: "OAuth state didn't verify (most likely cause: SHOPIFY_API_SECRET differs between the backend that started OAuth and the one that handled the callback, or you're testing across local + production).",
+        bad_hmac: "Shopify's callback HMAC didn't match (SHOPIFY_API_SECRET wrong, or callback URL was tampered with).",
+        missing_code: "Shopify didn't return an auth code, the install may have been cancelled.",
+        callback_failed: "Backend hit an error during token exchange, check API logs.",
+      };
+      const sublabel = sub ? ` [${sub}]` : "";
+      setBanner({ kind: "error", text: `Connection failed: ${code}${sublabel}. ${HUMAN[code] || ""}` });
+    }
     const next = new URLSearchParams(params);
-    next.delete("status"); next.delete("error"); next.delete("shop");
+    next.delete("status"); next.delete("error"); next.delete("sub"); next.delete("shop");
     setParams(next, { replace: true });
     const t = setTimeout(() => setBanner(null), 6000);
     return () => clearTimeout(t);
