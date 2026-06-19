@@ -41,17 +41,25 @@ export default function ShopifyConnections() {
     else if (status === "error") {
       const code = params.get("error") || "unknown";
       const sub = params.get("sub");
+      const expected = params.get("expected");
+      const got = params.get("got");
       const HUMAN = {
-        bad_state: "OAuth state didn't verify (most likely cause: SHOPIFY_API_SECRET differs between the backend that started OAuth and the one that handled the callback, or you're testing across local + production).",
-        bad_hmac: "Shopify's callback HMAC didn't match (SHOPIFY_API_SECRET wrong, or callback URL was tampered with).",
-        missing_code: "Shopify didn't return an auth code, the install may have been cancelled.",
-        callback_failed: "Backend hit an error during token exchange, check API logs.",
+        "bad_state:sig": "OAuth state HMAC didn't verify. SHOPIFY_API_SECRET probably differs between the backend that started OAuth and the one that handled the callback.",
+        "bad_state:no_email": "OAuth state had no user email. Try logging out and back in.",
+        "bad_state:no_shop": "OAuth state had no shop. Try the flow again.",
+        "bad_state:shop_mismatch": `Shopify installed the app on a different store than the one you typed. You typed "${expected || "?"}" but Shopify processed install on "${got || "?"}". This usually means your Custom Distribution install link in Partner Dashboard is bound to "${got || "the wrong store"}", not to "${expected || "the store you typed"}". Update Distribution to bind to the right store, uninstall from the wrong store, and try again.`,
+        "bad_hmac:": "Shopify's callback HMAC didn't match. SHOPIFY_API_SECRET is wrong or the callback URL was tampered with.",
+        "missing_code:": "Shopify didn't return an auth code, the install may have been cancelled.",
+        "callback_failed:": "Backend hit an error during token exchange, check API logs.",
       };
+      const key = `${code}:${sub || ""}`;
+      const message = HUMAN[key] || HUMAN[`${code}:`] || "";
       const sublabel = sub ? ` [${sub}]` : "";
-      setBanner({ kind: "error", text: `Connection failed: ${code}${sublabel}. ${HUMAN[code] || ""}` });
+      setBanner({ kind: "error", text: `Connection failed: ${code}${sublabel}. ${message}` });
     }
     const next = new URLSearchParams(params);
-    next.delete("status"); next.delete("error"); next.delete("sub"); next.delete("shop");
+    next.delete("status"); next.delete("error"); next.delete("sub");
+    next.delete("expected"); next.delete("got"); next.delete("shop");
     setParams(next, { replace: true });
     const t = setTimeout(() => setBanner(null), 6000);
     return () => clearTimeout(t);
