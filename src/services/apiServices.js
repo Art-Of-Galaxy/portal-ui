@@ -221,6 +221,11 @@ export const apiServices = {
             headers: { 'Content-Type': 'application/json' },
         });
     },
+    social_media_get: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`social-media/posts/${id}${qs}`, { method: 'GET' });
+    },
     social_media_library: async ({ filter = 'all' } = {}) => {
         const userEmail = localStorage.getItem('user_email') || '';
         const qs = new URLSearchParams();
@@ -252,6 +257,116 @@ export const apiServices = {
         const userEmail = localStorage.getItem('user_email') || '';
         const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
         return fetchWithConfig(`social-connections/${id}${qs}`, { method: 'DELETE' });
+    },
+
+    // ---------- Shopify connections (multi-store) ----------
+    shopify_connections_list: async () => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`shopify-connections${qs}`, { method: 'GET' });
+    },
+    shopify_connections_start: async ({ shop_domain }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('shopify-connections/start', {
+            method: 'POST',
+            body: { shop_domain, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    shopify_connections_disconnect: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`shopify-connections/${id}${qs}`, { method: 'DELETE' });
+    },
+    shopify_connections_blogs: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`shopify-connections/${id}/blogs${qs}`, { method: 'GET' });
+    },
+    shopify_connections_patch: async ({ id, ...rest }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`shopify-connections/${id}`, {
+            method: 'PATCH',
+            body: { ...rest, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+
+    // ---------- Blog Engine (Shopify SEO articles) ----------
+    blog_engine_generate: async ({ brief }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('blog-engine/generate', {
+            method: 'POST',
+            body: { brief, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    blog_engine_save: async (payload) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('blog-engine/save', {
+            method: 'POST',
+            body: { ...payload, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    blog_engine_bulk: async (payload) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('blog-engine/bulk', {
+            method: 'POST',
+            body: { ...payload, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    blog_engine_publish_now: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`blog-engine/${id}/publish`, {
+            method: 'POST',
+            body: { user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    blog_engine_library: async ({ filter = 'all' } = {}) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = new URLSearchParams();
+        qs.set('filter', filter);
+        if (userEmail) qs.set('user_email', userEmail);
+        return fetchWithConfig(`blog-engine/library?${qs.toString()}`, { method: 'GET' });
+    },
+    blog_engine_stats: async () => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`blog-engine/stats${qs}`, { method: 'GET' });
+    },
+    blog_engine_get: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`blog-engine/articles/${id}${qs}`, { method: 'GET' });
+    },
+    blog_engine_autopilot_save: async (payload) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('blog-engine/autopilot', {
+            method: 'POST',
+            body: { ...payload, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    blog_engine_autopilots_list: async () => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`blog-engine/autopilot${qs}`, { method: 'GET' });
+    },
+    blog_engine_autopilot_patch: async ({ id, ...rest }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`blog-engine/autopilot/${id}`, {
+            method: 'PATCH',
+            body: { ...rest, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    blog_engine_autopilot_destroy: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`blog-engine/autopilot/${id}${qs}`, { method: 'DELETE' });
     },
 
     generate_packaging_design: async ({ form, model }) => {

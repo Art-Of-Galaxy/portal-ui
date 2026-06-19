@@ -691,16 +691,69 @@ export default function SocialMediaCreate() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const initialType = params.get("type");
-  const [step, setStep] = useState(initialType && TYPES[initialType] ? "brief" : "typePicker");
+  const initialPostId = params.get("post");
+  // When loading an existing post we jump straight to preview; otherwise
+  // the user starts at the type picker (or the brief, if ?type= was set).
+  const initialStep = initialPostId
+    ? "loadingPost"
+    : (initialType && TYPES[initialType] ? "brief" : "typePicker");
+  const [step, setStep] = useState(initialStep);
   const [type, setType] = useState(initialType && TYPES[initialType] ? initialType : null);
   const [brief, setBrief] = useState(() => ({ platforms: initialType && TYPES[initialType] ? TYPES[initialType].platforms : [] }));
   const [result, setResult] = useState(null);
-  const [postId, setPostId] = useState(null);
+  const [postId, setPostId] = useState(initialPostId ? Number(initialPostId) : null);
   const [successInfo, setSuccessInfo] = useState(null);
   const [genError, setGenError] = useState("");
   const generatingRef = useRef(false);
 
   const onUpdate = useCallback((patch) => setBrief((b) => ({ ...b, ...patch })), []);
+
+  // Hydrate from server when the Hub linked us with ?post=N. We rebuild
+  // the same shape that runGeneration produces so the Preview component
+  // works without changes; cover URL comes from assets_json.
+  useEffect(() => {
+    if (!initialPostId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiServices.social_media_get({ id: initialPostId });
+        if (cancelled) return;
+        if (!res?.success || !res.post) {
+          throw new Error(res?.message || "Could not load that post.");
+        }
+        const p = res.post;
+        const t = p.content_type && TYPES[p.content_type] ? p.content_type : "post";
+        const loadedBrief = {
+          ...(p.brief || {}),
+          platforms: Array.isArray(p.platforms) && p.platforms.length
+            ? p.platforms
+            : (p.brief?.platforms || TYPES[t].platforms),
+        };
+        const hashtagsArr = typeof p.hashtags === "string" && p.hashtags
+          ? p.hashtags.split(/\s+/).filter(Boolean)
+          : (Array.isArray(p.spec?.hashtags) ? p.spec.hashtags : []);
+        const fakeResult = {
+          spec: {
+            ...(p.spec || {}),
+            caption: p.caption || p.spec?.caption || "",
+            hashtags: hashtagsArr,
+          },
+          cover: p.assets?.cover_url ? { url: p.assets.cover_url } : null,
+        };
+        setType(t);
+        setBrief(loadedBrief);
+        setResult(fakeResult);
+        setPostId(p.id);
+        setStep("preview");
+      } catch (err) {
+        if (!cancelled) {
+          setGenError(err?.message || "Could not load that post.");
+          setStep("typePicker");
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [initialPostId]);
 
   function pickType(key) {
     setType(key);
@@ -770,6 +823,12 @@ export default function SocialMediaCreate() {
       </button>
 
       {genError ? <div className="sm-banner is-error">{genError}</div> : null}
+
+      {step === "loadingPost" ? (
+        <div className="sm-loading" style={{ minHeight: 240 }}>
+          <Loader2 size={14} className="bg-spin" /> Loading post...
+        </div>
+      ) : null}
 
       {step === "typePicker" ? <TypePicker onPick={pickType} /> : null}
 

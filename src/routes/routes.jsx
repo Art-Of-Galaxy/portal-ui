@@ -26,6 +26,10 @@ import EcommerceMockupsQuiz from "../pages/projects/EcommerceMockupsQuiz";
 import SocialMediaHub from "../pages/projects/social/SocialMediaHub";
 import SocialMediaCreate from "../pages/projects/social/SocialMediaCreate";
 import SocialConnections from "../pages/projects/social/SocialConnections";
+import AIIntegrations from "../pages/projects/AIIntegrations";
+import BlogEngineHub from "../pages/projects/blog/BlogEngineHub";
+import BlogEngineCreate from "../pages/projects/blog/BlogEngineCreate";
+import ShopifyConnections from "../pages/projects/blog/ShopifyConnections";
 import PrivacyPolicy from "../pages/legal/PrivacyPolicy";
 import DataDeletion from "../pages/legal/DataDeletion";
 import LogoDesign from "../pages/projects/LogoDesign";
@@ -111,7 +115,10 @@ const AppRoutes = () => {
           <Route path="/new-projects/social/connections" element={withLayout(SocialConnections)} />
           <Route path="/new-projects/email" element={withLayout(ComingSoon, { title: "Email Marketing", description: "Lifecycle automations, broadcasts and template design. Coming soon." })} />
           <Route path="/new-projects/campaigns" element={withLayout(ComingSoon, { title: "B2B & B2C Campaigns", description: "Multi-channel campaign strategy and creative. Coming soon." })} />
-          <Route path="/new-projects/ai-integrations" element={withLayout(ComingSoon, { title: "AI Integrations & Automations", description: "Voice agents, chatbots and workflow automation. Coming soon." })} />
+          <Route path="/new-projects/ai-integrations" element={withLayout(AIIntegrations)} />
+          <Route path="/new-projects/ai-integrations/shopify-blog" element={withLayout(BlogEngineHub)} />
+          <Route path="/new-projects/ai-integrations/shopify-blog/create" element={withLayout(BlogEngineCreate)} />
+          <Route path="/new-projects/ai-integrations/shopify-blog/connections" element={withLayout(ShopifyConnections)} />
           <Route path="/new-projects/video" element={withLayout(AIVideoProduction)} />
           <Route path="/new-projects/video/ugc-ads" element={withLayout(UGCAdsForm)} />
 
