@@ -107,60 +107,75 @@ export default function ShopifyConnections() {
         <ArrowLeft size={16} /> Back to Blog Engine
       </button>
 
-      <header className="sh-page-header">
-        <div>
-          <h1>Connected Shopify stores</h1>
-          <p>Connect one or more Shopify stores. The Blog Engine will publish articles directly to the store you pick.</p>
+      <header className="svc-page-hero">
+        <div className="svc-page-hero-content">
+          <span className="svc-page-hero-tile"><Store size={22} /></span>
+          <div>
+            <h1 className="svc-page-hero-title">Connected Shopify stores</h1>
+            <p className="svc-page-hero-sub">Connect one or more Shopify stores. The Blog Engine will publish articles directly to the store you pick.</p>
+          </div>
         </div>
       </header>
 
-      {banner ? (
-        <div className={`sm-banner is-${banner.kind}`}>
-          {banner.kind === "success" ? <Check size={14} /> : <AlertTriangle size={14} />}
-          <span>{banner.text}</span>
-        </div>
-      ) : null}
-
-      {error ? <div className="sm-banner is-error"><AlertTriangle size={14} /><span>{error}</span></div> : null}
-
-      <section className="sm-conn-section">
-        <h2 className="sm-section-title">Connect a new store</h2>
-        <form onSubmit={handleConnect} className="sh-connect-form">
-          <div className="sh-connect-row">
-            <Store size={16} />
-            <input
-              type="text"
-              className="sh-connect-input"
-              placeholder="yourstore.myshopify.com"
-              value={shopInput}
-              onChange={(e) => setShopInput(e.target.value)}
-              disabled={busy}
-              autoFocus
-            />
-            <button type="submit" className="sm-conn-cta" disabled={busy} style={{ width: "auto", padding: "0 18px" }}>
-              {busy ? <Loader2 size={14} className="bg-spin" /> : <Plug size={14} />}
-              Connect
-            </button>
+      <div className="svc-page-shell">
+        {banner ? (
+          <div className={`sm-banner is-${banner.kind}`}>
+            {banner.kind === "success" ? <Check size={14} /> : <AlertTriangle size={14} />}
+            <span>{banner.text}</span>
           </div>
-          <p className="sh-connect-hint">
-            Use your Shopify admin domain (ends in <code>.myshopify.com</code>). You can find it under <em>Settings → Domains → myshopify.com domain</em>.
-          </p>
-        </form>
-      </section>
+        ) : null}
 
-      <section className="sm-conn-section">
-        <h2 className="sm-section-title">Your stores</h2>
-        {loading ? (
-          <div className="sm-loading"><Loader2 size={14} className="bg-spin" /> Loading...</div>
-        ) : !connections.length ? (
-          <div className="sm-empty">
-            <div className="sm-empty-icon"><Store size={26} /></div>
-            <h3>No stores connected yet</h3>
-            <p>Add your first store above to start publishing.</p>
-          </div>
-        ) : (
-          <ul className="sm-conn-list">
-            {connections.map((c) => {
+        {error ? <div className="sm-banner is-error"><AlertTriangle size={14} /><span>{error}</span></div> : null}
+
+        <section className="sm-conn-section">
+          <h2 className="sm-section-title">Connect a new store</h2>
+          <form onSubmit={handleConnect} className="sh-connect-form">
+            <div className="sh-connect-row">
+              <Store size={16} />
+              <input
+                type="text"
+                className="sh-connect-input"
+                placeholder="yourstore.myshopify.com"
+                value={shopInput}
+                onChange={(e) => setShopInput(e.target.value)}
+                disabled={busy}
+                autoFocus
+              />
+              <button type="submit" className="sm-conn-cta" disabled={busy} style={{ width: "auto", padding: "0 18px" }}>
+                {busy ? <Loader2 size={14} className="bg-spin" /> : <Plug size={14} />}
+                Connect
+              </button>
+            </div>
+            <p className="sh-connect-hint">
+              Use your Shopify admin domain (ends in <code>.myshopify.com</code>). You can find it under <em>Settings → Domains → myshopify.com domain</em>.
+            </p>
+          </form>
+        </section>
+
+        <section className="sm-conn-section">
+          <h2 className="sm-section-title">Your stores</h2>
+          {loading ? (
+            <ul className="sm-conn-list" aria-busy="true">
+              {[0, 1].map((i) => (
+                <li key={i} className="sk-conn-row">
+                  <span className="sk-block sk-circle" />
+                  <div className="sk-conn-body">
+                    <span className="sk-block sk-line is-md" />
+                    <span className="sk-block sk-line is-sm" />
+                  </div>
+                  <span className="sk-block sk-pill" />
+                </li>
+              ))}
+            </ul>
+          ) : !connections.length ? (
+            <div className="sm-empty">
+              <div className="sm-empty-icon"><Store size={26} /></div>
+              <h3>No stores connected yet</h3>
+              <p>Add your first store above to start publishing.</p>
+            </div>
+          ) : (
+            <ul className="sm-conn-list">
+              {connections.map((c) => {
               const needsReauth = c.state === "reauth_required";
               return (
                 <li key={c.id} className={`sm-conn-row ${needsReauth ? "is-reauth" : ""}`}>
@@ -188,7 +203,8 @@ export default function ShopifyConnections() {
             })}
           </ul>
         )}
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

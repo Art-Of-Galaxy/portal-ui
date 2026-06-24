@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, ArrowRight, Loader2, Pause, Play, Plus, Settings, Store } from "lucide-react";
+import { AlertTriangle, ArrowRight, FileText, Loader2, Pause, Play, Plus, Settings } from "lucide-react";
 import { apiServices } from "../../../services/apiServices";
 
 // Blog Engine Content Hub. Top: optional Autopilot banner showing live
@@ -114,19 +114,25 @@ export default function BlogEngineHub() {
 
   return (
     <div className="portal-page sm-page">
-      <div className="sm-hub-header-row">
-        <div>
-          <h1 className="sm-hub-title">Blog Engine</h1>
-          <div className="sm-hub-badges">
-            <span className="sm-hub-badge is-accent">📝 Shopify Blog</span>
-            {primaryConn ? (
-              <span className="sm-hub-badge is-success">{primaryConn.shop_name || primaryConn.shop_domain} · Connected</span>
-            ) : (
-              <span className="sm-hub-badge">No store connected yet</span>
-            )}
+      <header className="svc-page-hero">
+        <div className="svc-page-hero-content">
+          <span className="svc-page-hero-tile"><FileText size={22} /></span>
+          <div>
+            <h1 className="svc-page-hero-title">
+              Blog Engine
+              {/* <span className="sm-hub-badge is-accent">Shopify Blog</span> */}
+              {loading ? (
+                <span className="sk-block sk-pill" style={{ width: 130 }} />
+              ) : primaryConn ? (
+                <span className="sm-hub-badge is-success">{primaryConn.shop_name || primaryConn.shop_domain} · Connected</span>
+              ) : (
+                <span className="sm-hub-badge">No store connected yet</span>
+              )}
+            </h1>
+            <p className="svc-page-hero-sub">Generate SEO / GEO / AEO articles and publish straight to Shopify. One at a time, or fully on autopilot.</p>
           </div>
         </div>
-        <div className="sm-hub-actions">
+        <div className="svc-page-hero-actions">
           <button
             type="button"
             className="sm-hub-action-secondary"
@@ -142,7 +148,7 @@ export default function BlogEngineHub() {
             <Plus size={14} /> Create article
           </button>
         </div>
-      </div>
+      </header>
 
       {error ? <div className="sm-banner is-error"><AlertTriangle size={14} /><span>{error}</span></div> : null}
 
@@ -199,7 +205,14 @@ export default function BlogEngineHub() {
         <aside className="sm-hub-side">
           <section className="sm-side-card">
             <span className="sm-side-label">Shopify connection</span>
-            {primaryConn ? (
+            {loading ? (
+              <>
+                <div className="be-conn-row"><span className="sk-block sk-line is-sm" /><span className="sk-block sk-line is-sm" /></div>
+                <div className="be-conn-row"><span className="sk-block sk-line is-sm" /><span className="sk-block sk-line is-md" /></div>
+                <div className="be-conn-row"><span className="sk-block sk-line is-sm" /><span className="sk-block sk-line is-md" /></div>
+                <div className="be-conn-row"><span className="sk-block sk-line is-sm" /><span className="sk-block sk-line is-sm" /></div>
+              </>
+            ) : primaryConn ? (
               <>
                 <div className="be-conn-row"><span className="be-conn-dot" /><span>Status</span><span className="be-conn-val is-good">Connected</span></div>
                 <div className="be-conn-row"><span>Store</span><span className="be-conn-val">{primaryConn.shop_domain}</span></div>
@@ -219,12 +232,23 @@ export default function BlogEngineHub() {
 
           <section className="sm-side-card">
             <span className="sm-side-label">Last 30 days</span>
-            <div className="sm-stat-grid">
-              <div className="sm-stat-box"><span className="sm-stat-num">{stats?.published_30d ?? 0}</span><span className="sm-stat-lab">Published</span></div>
-              <div className="sm-stat-box"><span className="sm-stat-num">{stats?.queued ?? 0}</span><span className="sm-stat-lab">Queued</span></div>
-              <div className="sm-stat-box"><span className="sm-stat-num">{stats?.avg_seo ?? 0}</span><span className="sm-stat-lab">Avg SEO</span></div>
-              <div className="sm-stat-box"><span className="sm-stat-num">{stats?.drafts ?? 0}</span><span className="sm-stat-lab">Drafts</span></div>
-            </div>
+            {loading ? (
+              <div className="sm-stat-grid">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="sm-stat-box">
+                    <span className="sk-block sk-line is-lg" />
+                    <span className="sk-block sk-line is-sm" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="sm-stat-grid">
+                <div className="sm-stat-box"><span className="sm-stat-num">{stats?.published_30d ?? 0}</span><span className="sm-stat-lab">Published</span></div>
+                <div className="sm-stat-box"><span className="sm-stat-num">{stats?.queued ?? 0}</span><span className="sm-stat-lab">Queued</span></div>
+                <div className="sm-stat-box"><span className="sm-stat-num">{stats?.avg_seo ?? 0}</span><span className="sm-stat-lab">Avg SEO</span></div>
+                <div className="sm-stat-box"><span className="sm-stat-num">{stats?.drafts ?? 0}</span><span className="sm-stat-lab">Drafts</span></div>
+              </div>
+            )}
           </section>
 
           {queuedKeywords.length ? (
@@ -273,7 +297,21 @@ export default function BlogEngineHub() {
           </div>
 
           {loading ? (
-            <div className="sm-loading"><Loader2 size={14} className="bg-spin" /> Loading articles...</div>
+            <div className="be-article-list" aria-busy="true">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="sk-article-row">
+                  <span className="sk-block sk-square" />
+                  <div className="sk-body">
+                    <span className="sk-block sk-line is-md" />
+                    <span className="sk-block sk-line is-sm" />
+                  </div>
+                  <div className="sk-right">
+                    <span className="sk-block sk-pill" />
+                    <span className="sk-block sk-line is-xs" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : !visible.length ? (
             <div className="sm-empty">
               <div className="sm-empty-icon">📝</div>

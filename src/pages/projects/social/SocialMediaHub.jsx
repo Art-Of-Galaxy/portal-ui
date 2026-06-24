@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Heart, Loader2, MessageCircle, Plus, Send, Settings } from "lucide-react";
+import { ArrowRight, Heart, MessageCircle, Plus, Send, Settings, Sparkles } from "lucide-react";
 import { apiServices } from "../../../services/apiServices";
 
 // Social Media Studio Content Hub. Default landing when the user enters
@@ -118,15 +118,23 @@ export default function SocialMediaHub() {
 
   return (
     <div className="portal-page sm-page">
-      <div className="sm-hub-header-row">
-        <div>
-          <h1 className="sm-hub-title">Social Media Studio</h1>
-          <div className="sm-hub-badges">
-            <span className="sm-hub-badge is-accent">📱 Content Hub</span>
-            <span className="sm-hub-badge is-success">{connections.length} account{connections.length === 1 ? "" : "s"} connected</span>
+      <header className="svc-page-hero">
+        <div className="svc-page-hero-content">
+          <span className="svc-page-hero-tile"><Sparkles size={22} /></span>
+          <div>
+            <h1 className="svc-page-hero-title">
+              Social Media Studio
+              <span className="sm-hub-badge is-accent">Content Hub</span>
+              {loading ? (
+                <span className="sk-block sk-pill" style={{ width: 130 }} />
+              ) : (
+                <span className="sm-hub-badge is-success">{connections.length} account{connections.length === 1 ? "" : "s"} connected</span>
+              )}
+            </h1>
+            <p className="svc-page-hero-sub">Plan, generate, schedule, and publish across Instagram, Facebook, and YouTube from one hub.</p>
           </div>
         </div>
-        <div className="sm-hub-actions">
+        <div className="svc-page-hero-actions">
           <button
             type="button"
             className="sm-hub-action-secondary"
@@ -142,7 +150,7 @@ export default function SocialMediaHub() {
             <Plus size={14} /> Create content
           </button>
         </div>
-      </div>
+      </header>
 
       {error ? <div className="sm-banner is-error">{error}</div> : null}
 
@@ -151,7 +159,17 @@ export default function SocialMediaHub() {
         <aside className="sm-hub-side">
           <section className="sm-side-card">
             <span className="sm-side-label">Connected accounts</span>
-            {connections.length === 0 ? (
+            {loading ? (
+              [0, 1].map((i) => (
+                <div key={i} className="sm-conn-row is-compact">
+                  <span className="sk-block sk-circle" style={{ width: 28, height: 28 }} />
+                  <div className="sm-conn-meta">
+                    <span className="sk-block sk-line is-md" />
+                    <span className="sk-block sk-line is-sm" />
+                  </div>
+                </div>
+              ))
+            ) : connections.length === 0 ? (
               <button
                 type="button"
                 className="sm-side-link"
@@ -177,24 +195,35 @@ export default function SocialMediaHub() {
 
           <section className="sm-side-card">
             <span className="sm-side-label">This week</span>
-            <div className="sm-stat-grid">
-              <div className="sm-stat-box">
-                <span className="sm-stat-num">{stats?.this_week?.posts_created ?? 0}</span>
-                <span className="sm-stat-lab">Posts created</span>
+            {loading ? (
+              <div className="sm-stat-grid">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="sm-stat-box">
+                    <span className="sk-block sk-line is-lg" />
+                    <span className="sk-block sk-line is-sm" />
+                  </div>
+                ))}
               </div>
-              <div className="sm-stat-box">
-                <span className="sm-stat-num">{stats?.this_week?.scheduled ?? 0}</span>
-                <span className="sm-stat-lab">Scheduled</span>
+            ) : (
+              <div className="sm-stat-grid">
+                <div className="sm-stat-box">
+                  <span className="sm-stat-num">{stats?.this_week?.posts_created ?? 0}</span>
+                  <span className="sm-stat-lab">Posts created</span>
+                </div>
+                <div className="sm-stat-box">
+                  <span className="sm-stat-num">{stats?.this_week?.scheduled ?? 0}</span>
+                  <span className="sm-stat-lab">Scheduled</span>
+                </div>
+                <div className="sm-stat-box">
+                  <span className="sm-stat-num">{stats?.this_week?.published_week ?? 0}</span>
+                  <span className="sm-stat-lab">Published</span>
+                </div>
+                <div className="sm-stat-box">
+                  <span className="sm-stat-num">{counts.draft}</span>
+                  <span className="sm-stat-lab">Drafts</span>
+                </div>
               </div>
-              <div className="sm-stat-box">
-                <span className="sm-stat-num">{stats?.this_week?.published_week ?? 0}</span>
-                <span className="sm-stat-lab">Published</span>
-              </div>
-              <div className="sm-stat-box">
-                <span className="sm-stat-num">{counts.draft}</span>
-                <span className="sm-stat-lab">Drafts</span>
-              </div>
-            </div>
+            )}
           </section>
 
           <section className="sm-side-card">
@@ -249,7 +278,18 @@ export default function SocialMediaHub() {
           </div>
 
           {loading ? (
-            <div className="sm-loading"><Loader2 size={14} className="bg-spin" /> Loading content...</div>
+            <div className="sm-content-grid" aria-busy="true">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="sk-post-card">
+                  <span className="sk-block sk-cover" />
+                  <div className="sk-post-foot">
+                    <span className="sk-block sk-line is-md" />
+                    <span className="sk-block sk-line is-sm" />
+                    <span className="sk-block sk-pill" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : !visible.length ? (
             <div className="sm-empty">
               <div className="sm-empty-icon">📱</div>

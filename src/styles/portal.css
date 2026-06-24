@@ -7212,7 +7212,7 @@ html.portal-theme-dark {
    Social Media Studio
    ===================================================================== */
 
-.sm-page { max-width: 1100px; margin: 0 auto; padding: 0 0 60px; }
+.sm-page { max-width: 1100px; margin: 0 auto; padding: 0 0 60px; margin-top: 2rem;}
 .sm-page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; gap: 16px; flex-wrap: wrap; }
 .sm-page-header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: var(--portal-text); margin-bottom: 8px; }
 .sm-page-header p { font-size: 13px; color: var(--portal-text-muted); }
@@ -7674,3 +7674,128 @@ html.portal-theme-dark {
 .be-ap-summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 6px 0; }
 .be-ap-summary-row + .be-ap-summary-row { border-top: 1px dashed var(--portal-border); }
 .be-ap-summary-row strong { font-weight: 600; color: var(--portal-text); }
+
+/* ============================================================
+   Branding-panel-style page hero, reused on social + blog hubs.
+   Same green icon tile + title + sub as the BrandingDesign page.
+   ============================================================ */
+.svc-page-hero {
+  max-width: 1100px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 0.4rem;
+  flex-wrap: wrap;
+}
+.svc-page-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+}
+.svc-page-hero-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #00cf8b 0%, #00d4a3 100%);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 14px rgba(0, 207, 139, 0.28);
+}
+.svc-page-hero-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--portal-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.svc-page-hero-sub {
+  margin: 0.15rem 0 0;
+  font-size: 12.5px;
+  color: var(--portal-text-muted);
+}
+.svc-page-hero-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.svc-page-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 0.4rem;
+}
+
+/* ============================================================
+   Shimmer skeleton primitives, reused across hubs + connections.
+   .sk-block is the base — pair with width/height utilities or wrap.
+   ============================================================ */
+.sk-block {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--portal-border) 0%,
+    var(--portal-surface-muted) 40%,
+    var(--portal-border) 80%
+  );
+  background-size: 200% 100%;
+  animation: portal-shimmer 1.4s linear infinite;
+}
+.sk-line { height: 10px; border-radius: 6px; }
+.sk-line.is-xs { height: 8px; width: 30%; }
+.sk-line.is-sm { height: 10px; width: 50%; }
+.sk-line.is-md { height: 12px; width: 75%; }
+.sk-line.is-lg { height: 16px; width: 60%; }
+.sk-line.is-full { height: 12px; width: 100%; }
+.sk-pill  { height: 22px; width: 80px; border-radius: 999px; }
+.sk-circle { border-radius: 50%; }
+.sk-square { border-radius: 12px; }
+
+.sk-card {
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sk-conn-row {
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sk-conn-row .sk-circle { width: 34px; height: 34px; flex-shrink: 0; }
+.sk-conn-row .sk-conn-body { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.sk-article-row {
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sk-article-row .sk-square { width: 56px; height: 56px; flex-shrink: 0; }
+.sk-article-row .sk-body { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.sk-article-row .sk-right { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+.sk-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sk-stat-box { background: var(--portal-surface-muted); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.sk-post-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.sk-post-card { background: var(--portal-surface); border: 1px solid var(--portal-border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.sk-post-card .sk-block.sk-cover { height: 160px; border-radius: 0; animation-delay: 0.05s; }
+.sk-post-card .sk-post-foot { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Coming-soon variant used on the hub when nothing is configured yet. */
+.sk-fade { opacity: 0.7; }

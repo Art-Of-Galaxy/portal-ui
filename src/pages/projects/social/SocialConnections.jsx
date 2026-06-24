@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, Info, Link as LinkIcon, Loader2, Plug, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Info, Link as LinkIcon, Loader2, Plug, Plus, RefreshCw, Share2, Trash2 } from "lucide-react";
 import { apiServices } from "../../../services/apiServices";
 
 // Connected accounts page. Lists every active connection from the
@@ -128,10 +128,13 @@ export default function SocialConnections() {
         Back to Social Media Studio
       </button>
 
-      <header className="sm-page-header">
-        <div>
-          <h1>Connected accounts</h1>
-          <p>Connect Instagram, Facebook, and YouTube so the agent can post and schedule for you.</p>
+      <header className="svc-page-hero">
+        <div className="svc-page-hero-content">
+          <span className="svc-page-hero-tile"><Share2 size={22} /></span>
+          <div>
+            <h1 className="svc-page-hero-title">Connected accounts</h1>
+            <p className="svc-page-hero-sub">Connect Instagram, Facebook, and YouTube so the agent can post and schedule for you.</p>
+          </div>
         </div>
       </header>
 
@@ -190,7 +193,18 @@ export default function SocialConnections() {
       <section className="sm-conn-section">
         <h2 className="sm-section-title">Active connections</h2>
         {loading ? (
-          <div className="sm-loading"><Loader2 size={14} className="bg-spin" /> Loading...</div>
+          <ul className="sm-conn-list" aria-busy="true">
+            {[0, 1].map((i) => (
+              <li key={i} className="sk-conn-row">
+                <span className="sk-block sk-circle" />
+                <div className="sk-conn-body">
+                  <span className="sk-block sk-line is-md" />
+                  <span className="sk-block sk-line is-sm" />
+                </div>
+                <span className="sk-block sk-pill" />
+              </li>
+            ))}
+          </ul>
         ) : !connections.length ? (
           <div className="sm-empty">
             <div className="sm-empty-icon"><LinkIcon size={26} /></div>
