@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle, ArrowLeft, ArrowRight, Calendar, ChevronLeft, ChevronRight,
-  Loader2, Sparkles, Store, Upload,
+  Image as ImageIcon, Loader2, RefreshCw, Sparkles, Store, Upload,
 } from "lucide-react";
 import { apiServices } from "../../../services/apiServices";
 import BrandAssetUploader from "../../../components/brand/BrandAssetUploader";
@@ -374,18 +374,92 @@ Generating.propTypes = { mode: PropTypes.string.isRequired, onSettled: PropTypes
 
 // ---------- Preview ----------
 
-function Preview({ mode, brief, result, onScheduleNext, onEdit }) {
+function Preview({ mode, brief, result, articleId, onFeaturedChange, onScheduleNext, onEdit }) {
   const m = MODES[mode];
   const spec = result?.spec || {};
   const featured = result?.featured || null;
   const bodyHtml = result?.body_html || "";
   const customFeaturedFromUser = (brief.custom_image || [])[0]?.url;
 
-  const heroBg = customFeaturedFromUser
-    ? `url(${customFeaturedFromUser}) center/cover, ${m.grad}`
-    : featured?.url
-      ? `url(${featured.url}) center/cover, ${m.grad}`
-      : m.grad;
+  // The hero shows whatever featured we have. Order: live `featured`
+  // (which is what state reflects after any swap/regen), then the
+  // user-supplied brief.custom_image, then the mode gradient.
+  const currentImageUrl = featured?.url || customFeaturedFromUser || null;
+  const heroBg = currentImageUrl
+    ? `url(${currentImageUrl}) center/cover, ${m.grad}`
+    : m.grad;
+
+  // Featured-image picker state. Two buttons:
+  //   - Upload: file input -> /api/files/upload -> setFeaturedImage
+  //   - Regenerate: rerun fal.ai with the (optionally edited) prompt
+  const fileInputRef = useRef(null);
+  const [imgPrompt, setImgPrompt] = useState(spec.image_prompt || "");
+  const [imgBusy, setImgBusy] = useState(null); // 'upload' | 'regen' | null
+  const [imgError, setImgError] = useState("");
+  useEffect(() => { setImgPrompt(spec.image_prompt || ""); }, [spec.image_prompt]);
+
+  async function persistFeatured(image_url, source, content_type) {
+    if (!articleId) {
+      onFeaturedChange?.({ url: image_url, source, content_type: content_type || null });
+      return;
+    }
+    const res = await apiServices.blog_engine_set_featured_image({
+      id: articleId,
+      image_url,
+      source,
+      content_type,
+    });
+    if (!res?.success) throw new Error(res?.message || "Could not save image.");
+    onFeaturedChange?.(res.featured || { url: image_url, source, content_type });
+  }
+
+  async function handleUploadClick() {
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileChosen(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { setImgError("Pick an image file."); return; }
+    setImgBusy("upload");
+    setImgError("");
+    try {
+      const up = await apiServices.upload_file(file, {
+        projectName: brief.brand || "Blog Article",
+        category: "blog-featured",
+        serviceType: "blog-engine",
+      });
+      const url = up?.url || up?.file?.url || up?.data?.url;
+      if (!url) throw new Error(up?.message || "Upload returned no URL.");
+      await persistFeatured(url, "user", file.type);
+    } catch (err) {
+      setImgError(err?.message || "Upload failed.");
+    } finally {
+      setImgBusy(null);
+    }
+  }
+
+  async function handleRegenerate() {
+    if (!articleId) { setImgError("Save the draft first, then regenerate."); return; }
+    if (!imgPrompt.trim()) { setImgError("Add an image prompt before regenerating."); return; }
+    setImgBusy("regen");
+    setImgError("");
+    try {
+      const refs = (brief.reference_images || []).map((r) => r?.url).filter(Boolean);
+      const res = await apiServices.blog_engine_regen_image({
+        id: articleId,
+        prompt: imgPrompt,
+        reference_image_urls: refs,
+      });
+      if (!res?.success || !res.featured?.url) throw new Error(res?.message || "Image generation failed.");
+      onFeaturedChange?.(res.featured);
+    } catch (err) {
+      setImgError(err?.message || "Could not regenerate.");
+    } finally {
+      setImgBusy(null);
+    }
+  }
 
   const [editedMetaTitle, setEditedMetaTitle] = useState(spec.meta_title || "");
   const [editedMetaDesc, setEditedMetaDesc] = useState(spec.meta_description || "");
@@ -416,6 +490,57 @@ function Preview({ mode, brief, result, onScheduleNext, onEdit }) {
       </div>
 
       <aside className="be-seo-panel">
+        <section className="be-seo-card">
+          <span className="be-seo-label">Featured image</span>
+          <div className="be-featured-preview" style={{ backgroundImage: currentImageUrl ? `url(${currentImageUrl})` : "none" }}>
+            {!currentImageUrl ? <span className="be-featured-empty"><ImageIcon size={22} /> No image yet</span> : null}
+            {featured?.source ? (
+              <span className={`be-featured-badge is-${featured.source}`}>
+                {featured.source === "user" ? "Your upload" : "AI generated"}
+              </span>
+            ) : null}
+          </div>
+          <div className="be-featured-actions">
+            <button
+              type="button"
+              className="be-img-btn"
+              onClick={handleUploadClick}
+              disabled={imgBusy !== null}
+            >
+              {imgBusy === "upload" ? <Loader2 size={12} className="bg-spin" /> : <Upload size={12} />}
+              Upload
+            </button>
+            <button
+              type="button"
+              className="be-img-btn"
+              onClick={handleRegenerate}
+              disabled={imgBusy !== null || !articleId}
+              title={!articleId ? "Save the draft first" : "Regenerate with fal.ai"}
+            >
+              {imgBusy === "regen" ? <Loader2 size={12} className="bg-spin" /> : <RefreshCw size={12} />}
+              Regenerate
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleFileChosen}
+          />
+          <div className="be-meta-field" style={{ marginTop: 10 }}>
+            <div className="be-meta-flabel"><span>Image prompt</span></div>
+            <textarea
+              className="be-meta-input is-area"
+              rows={3}
+              value={imgPrompt}
+              onChange={(e) => setImgPrompt(e.target.value)}
+              placeholder="Describe the image you want fal.ai to generate"
+            />
+          </div>
+          {imgError ? <div className="be-img-error">{imgError}</div> : null}
+        </section>
+
         <section className="be-seo-card">
           <span className="be-seo-label">SEO score</span>
           <div className="be-seo-score-row">
@@ -495,6 +620,8 @@ Preview.propTypes = {
   mode: PropTypes.string.isRequired,
   brief: PropTypes.object.isRequired,
   result: PropTypes.object,
+  articleId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onFeaturedChange: PropTypes.func,
   onScheduleNext: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
 };
@@ -925,7 +1052,15 @@ export default function BlogEngineCreate() {
       ) : null}
       {step === "generating" && mode ? <Generating mode={mode} onSettled={() => {}} /> : null}
       {step === "preview" && mode ? (
-        <Preview mode={mode} brief={brief} result={result} onScheduleNext={handleScheduleNext} onEdit={() => setStep("brief")} />
+        <Preview
+          mode={mode}
+          brief={brief}
+          result={result}
+          articleId={articleId}
+          onFeaturedChange={(featured) => setResult((prev) => ({ ...(prev || {}), featured }))}
+          onScheduleNext={handleScheduleNext}
+          onEdit={() => setStep("brief")}
+        />
       ) : null}
       {step === "publish" && mode ? (
         <Publish mode={mode} brief={brief} articleId={articleId} connections={connections} onSuccess={handleSuccess} onBack={() => setStep("preview")} />

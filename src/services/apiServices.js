@@ -325,6 +325,22 @@ export const apiServices = {
             headers: { 'Content-Type': 'application/json' },
         });
     },
+    blog_engine_set_featured_image: async ({ id, image_url, source, content_type }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`blog-engine/${id}/featured-image`, {
+            method: 'POST',
+            body: { image_url, source, content_type, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    blog_engine_regen_image: async ({ id, prompt, reference_image_urls }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`blog-engine/${id}/regen-image`, {
+            method: 'POST',
+            body: { prompt, reference_image_urls, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
     blog_engine_library: async ({ filter = 'all' } = {}) => {
         const userEmail = localStorage.getItem('user_email') || '';
         const qs = new URLSearchParams();

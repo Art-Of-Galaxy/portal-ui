@@ -7675,6 +7675,89 @@ html.portal-theme-dark {
 .be-ap-summary-row + .be-ap-summary-row { border-top: 1px dashed var(--portal-border); }
 .be-ap-summary-row strong { font-weight: 600; color: var(--portal-text); }
 
+/* Featured-image picker on the Preview screen */
+.be-featured-preview {
+  position: relative;
+  width: 100%;
+  height: 130px;
+  border-radius: 10px;
+  background-color: var(--portal-surface-muted);
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 8px;
+  border: 1px solid var(--portal-border);
+}
+.be-featured-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--portal-text-subtle);
+  font-size: 12px;
+  font-weight: 500;
+}
+.be-featured-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(15, 28, 46, 0.72);
+  color: #fff;
+}
+.be-featured-badge.is-user { background: rgba(22, 163, 74, 0.92); }
+.be-featured-badge.is-fal,
+.be-featured-badge.is-AI  { background: rgba(85, 64, 255, 0.92); }
+.be-featured-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.be-img-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--portal-border);
+  background: var(--portal-surface);
+  color: var(--portal-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.be-img-btn:hover:not(:disabled) {
+  border-color: var(--portal-accent-tint);
+  color: var(--portal-accent-solid);
+}
+.be-img-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.be-img-error {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--portal-danger);
+  background: rgba(232, 77, 77, 0.08);
+  border: 1px solid rgba(232, 77, 77, 0.25);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
 /* ============================================================
    Branding-panel-style page hero, reused on social + blog hubs.
    Same green icon tile + title + sub as the BrandingDesign page.
