@@ -7901,3 +7901,25 @@ html.portal-theme-dark {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* Status badge for "partial" (post published but at least one
+   platform attempt failed) + the per-card inline error message. */
+.sm-ps.is-partial {
+  background: rgba(255, 176, 32, 0.14);
+  color: #a86b00;
+  border: 1px solid rgba(255, 176, 32, 0.32);
+}
+.sm-post-error {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(232, 77, 77, 0.08);
+  color: var(--portal-danger);
+  border: 1px solid rgba(232, 77, 77, 0.22);
+  font-size: 11px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

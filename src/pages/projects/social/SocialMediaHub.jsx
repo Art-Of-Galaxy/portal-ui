@@ -39,8 +39,18 @@ function PlatformPill({ platform }) {
   return <span className={`sm-plat-badge ${cls}`}>{ico}</span>;
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, lastError }) {
+  // Status comes from derived_status when available: 'partial' = the
+  // post is published but at least one platform attempt errored.
   if (status === "published") return <span className="sm-ps is-live">✓ Live</span>;
+  if (status === "partial") {
+    const tip = lastError?.message
+      ? `${(lastError.platform || "").toUpperCase()}: ${lastError.message}`
+      : "Some platforms failed to publish.";
+    return (
+      <span className="sm-ps is-partial" title={tip}>⚠ Partial</span>
+    );
+  }
   if (status === "scheduled") return <span className="sm-ps is-sched">📅 Scheduled</span>;
   if (status === "failed")    return <span className="sm-ps is-failed">! Failed</span>;
   return <span className="sm-ps is-draft">— Draft</span>;
@@ -331,7 +341,7 @@ export default function SocialMediaHub() {
                     <div className="sm-post-foot">
                       <div className="sm-post-name">{p.spec?.headline || p.spec?.hook || (p.caption || "").split("\n")[0] || `${p.content_type} draft`}</div>
                       <div className="sm-post-status-row">
-                        <StatusBadge status={p.status} />
+                        <StatusBadge status={p.derived_status || p.status} lastError={p.last_error} />
                         <span className="sm-ps-time">
                           {p.status === "scheduled" && p.scheduled_for
                             ? new Date(p.scheduled_for).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" })
@@ -340,6 +350,11 @@ export default function SocialMediaHub() {
                               : `Updated ${relTime(p.updated_at)} ago`}
                         </span>
                       </div>
+                      {p.last_error && (p.derived_status === "partial" || p.status === "failed") ? (
+                        <div className="sm-post-error" title={p.last_error.message}>
+                          ⚠ {(p.last_error.platform || "").toUpperCase()}: {p.last_error.message}
+                        </div>
+                      ) : null}
                       {p.metrics ? (
                         <div className="sm-post-metrics">
                           {p.metrics.likes ? <span className="sm-pm"><Heart size={11} /> {p.metrics.likes}</span> : null}
