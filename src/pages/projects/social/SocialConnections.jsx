@@ -8,8 +8,9 @@ import { apiServices } from "../../../services/apiServices";
 // one go for IG + FB, Google for YouTube), and lets them disconnect.
 
 const PLATFORMS = [
-  { key: "meta",    label: "Instagram + Facebook", sub: "One sign-in connects both via Meta Business.", icon: "📷" },
-  { key: "youtube", label: "YouTube",              sub: "Connect your channel to publish Shorts.",       icon: "▶" },
+  { key: "instagram", label: "Instagram",       sub: "Sign in directly with your Instagram Business or Creator account.", icon: "📷" },
+  { key: "meta",      label: "Facebook Pages",  sub: "Connect the Facebook Pages you admin so the agent can post to them.", icon: "f" },
+  { key: "youtube",   label: "YouTube",         sub: "Connect your channel to publish Shorts.",                              icon: "▶" },
 ];
 
 function platformBadgeClass(p) {
@@ -73,10 +74,18 @@ export default function SocialConnections() {
   }, [callbackStatus, callbackError, callbackConnected, params, setParams]);
 
   // Re-connecting maps to the same /start endpoint as a brand-new
-  // connect: Meta and Google both treat re-grants as a fresh
-  // OAuth round and refresh the stored tokens via upsert.
-  async function handleReconnect(platform) {
-    const key = platform === "youtube" ? "youtube" : "meta";
+  // connect: every provider treats re-grants as a fresh OAuth round
+  // and refreshes the stored tokens via upsert. Instagram rows from
+  // the classic Pages flow re-grant via 'meta'; rows from the direct
+  // Instagram Login flow (meta.source='instagram-oauth') re-grant via
+  // 'instagram'.
+  async function handleReconnect(connection) {
+    let key;
+    if (connection?.platform === "youtube") key = "youtube";
+    else if (connection?.platform === "facebook") key = "meta";
+    else if (connection?.platform === "instagram") {
+      key = connection?.meta?.source === "instagram-oauth" ? "instagram" : "meta";
+    } else key = "meta";
     await handleConnect(key);
   }
 
@@ -238,11 +247,11 @@ export default function SocialConnections() {
                     <button
                       type="button"
                       className="sm-conn-reconnect"
-                      onClick={() => handleReconnect(c.platform)}
-                      disabled={busyKey === "meta" || busyKey === "youtube"}
+                      onClick={() => handleReconnect(c)}
+                      disabled={busyKey === "meta" || busyKey === "instagram" || busyKey === "youtube"}
                       title="Reconnect"
                     >
-                      {busyKey === "meta" || busyKey === "youtube" ? <Loader2 size={12} className="bg-spin" /> : <RefreshCw size={12} />}
+                      {busyKey === "meta" || busyKey === "instagram" || busyKey === "youtube" ? <Loader2 size={12} className="bg-spin" /> : <RefreshCw size={12} />}
                       Reconnect
                     </button>
                   ) : null}

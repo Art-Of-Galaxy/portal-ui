@@ -124,7 +124,7 @@ export default function SocialMediaHub() {
           <div>
             <h1 className="svc-page-hero-title">
               Social Media Studio
-              <span className="sm-hub-badge is-accent">Content Hub</span>
+              {/* <span className="sm-hub-badge is-accent">Content Hub</span> */}
               {loading ? (
                 <span className="sk-block sk-pill" style={{ width: 130 }} />
               ) : (
