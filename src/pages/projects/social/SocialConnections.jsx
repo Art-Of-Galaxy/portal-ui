@@ -126,6 +126,24 @@ export default function SocialConnections() {
     }
   }
 
+  async function handleSetPrimary(connection) {
+    setBusyKey(`prim-${connection.id}`);
+    try {
+      await apiServices.social_connections_set_primary({ id: connection.id });
+      // Optimistic update: flip is_primary on the row + clear on
+      // siblings in the same platform.
+      setConnections((prev) => prev.map((c) => (
+        c.platform === connection.platform
+          ? { ...c, is_primary: c.id === connection.id }
+          : c
+      )));
+    } catch (err) {
+      setError(err?.message || "Could not update primary account.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
   return (
     <div className="portal-page sm-page">
       <button
@@ -224,11 +242,16 @@ export default function SocialConnections() {
           <ul className="sm-conn-list">
             {connections.map((c) => {
               const needsReauth = c.state === "reauth_required";
+              const siblingsInPlatform = connections.filter((x) => x.platform === c.platform).length;
+              const showPrimaryToggle = siblingsInPlatform > 1;
               return (
-                <li key={c.id} className={`sm-conn-row ${needsReauth ? "is-reauth" : ""}`}>
+                <li key={c.id} className={`sm-conn-row ${needsReauth ? "is-reauth" : ""} ${c.is_primary ? "is-primary" : ""}`}>
                   <span className={platformBadgeClass(c.platform)}>{platformIcon(c.platform)}</span>
                   <div className="sm-conn-meta">
-                    <span className="sm-conn-name">{c.account_name || c.account_handle || c.account_id}</span>
+                    <span className="sm-conn-name">
+                      {c.account_name || c.account_handle || c.account_id}
+                      {c.is_primary && showPrimaryToggle ? <span className="sm-conn-primary-pill">Primary</span> : null}
+                    </span>
                     <span className="sm-conn-sub">
                       {c.account_handle ? `@${c.account_handle.replace(/^@/, "")} · ` : ""}
                       {c.platform.charAt(0).toUpperCase() + c.platform.slice(1)}
@@ -243,6 +266,18 @@ export default function SocialConnections() {
                       <span className="sm-conn-dot" /> Connected
                     </span>
                   )}
+                  {showPrimaryToggle && !c.is_primary && !needsReauth ? (
+                    <button
+                      type="button"
+                      className="sm-conn-reconnect"
+                      onClick={() => handleSetPrimary(c)}
+                      disabled={busyKey === `prim-${c.id}`}
+                      title="Use this account as the publishing target"
+                    >
+                      {busyKey === `prim-${c.id}` ? <Loader2 size={12} className="bg-spin" /> : "★"}
+                      Set primary
+                    </button>
+                  ) : null}
                   {needsReauth ? (
                     <button
                       type="button"

@@ -258,6 +258,14 @@ export const apiServices = {
         const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
         return fetchWithConfig(`social-connections/${id}${qs}`, { method: 'DELETE' });
     },
+    social_connections_set_primary: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`social-connections/${id}/primary`, {
+            method: 'PATCH',
+            body: { user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
 
     // ---------- Shopify connections (multi-store) ----------
     shopify_connections_list: async () => {
