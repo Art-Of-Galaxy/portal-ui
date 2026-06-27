@@ -350,11 +350,6 @@ export default function SocialMediaHub() {
                               : `Updated ${relTime(p.updated_at)} ago`}
                         </span>
                       </div>
-                      {p.last_error && (p.derived_status === "partial" || p.status === "failed") ? (
-                        <div className="sm-post-error" title={p.last_error.message}>
-                          ⚠ {(p.last_error.platform || "").toUpperCase()}: {p.last_error.message}
-                        </div>
-                      ) : null}
                       {p.metrics ? (
                         <div className="sm-post-metrics">
                           {p.metrics.likes ? <span className="sm-pm"><Heart size={11} /> {p.metrics.likes}</span> : null}
