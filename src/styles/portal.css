@@ -7404,6 +7404,12 @@ html.portal-theme-dark {
 .sm-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .sm-field-label { font-size: 12px; font-weight: 500; color: var(--portal-text-muted); }
 .sm-field-optional { font-size: 11px; color: var(--portal-text-subtle); }
+.sm-field-helper {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--portal-text-muted);
+}
 .sm-field-input { padding: 11px 14px; border-radius: 8px; border: 1.5px solid var(--portal-border); font-family: inherit; font-size: 14px; color: var(--portal-text); background: var(--portal-bg); outline: none; transition: border-color .15s; width: 100%; }
 .sm-field-input:focus { border-color: var(--portal-accent-solid); }
 .sm-field-input.is-textarea { resize: vertical; height: 88px; line-height: 1.6; }

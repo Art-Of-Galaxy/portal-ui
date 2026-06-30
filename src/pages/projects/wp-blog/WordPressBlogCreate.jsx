@@ -118,10 +118,12 @@ function buildBriefSteps(mode) {
     fields: (mode === "autopilot" || mode === "bulk") ? [
       { id: "brand", type: "text", label: "Brand", placeholder: "e.g. Herbana", required: true },
       { id: "keywords", type: "textarea", label: "Keywords / topics", placeholder: "best adaptogens for stress\nashwagandha vs rhodiola\nhow to build a nootropic stack", required: true },
+      { id: "reference_url", type: "text", label: "Reference website (optional)", placeholder: "https://example.com/blog/great-article", required: false, helper: "We'll scrape this page and feed its content + structure to the writer for factual grounding and tone." },
     ] : [
       { id: "brand", type: "text", label: "Brand", placeholder: "e.g. Herbana", required: true },
       { id: "keyword", type: "text", label: mode === "cluster" ? "Pillar keyword" : "Primary keyword", placeholder: "e.g. adaptogens for stress", required: true },
       { id: "angle", type: "textarea", label: "Angle / notes (optional)", placeholder: "e.g. Beginner-friendly, science-backed, lead toward our Calm stack product", required: false },
+      { id: "reference_url", type: "text", label: "Reference website (optional)", placeholder: "https://example.com/blog/great-article", required: false, helper: "We'll scrape this page and feed its content + structure to the writer for factual grounding and tone." },
     ],
   };
   const seoStep = {
@@ -200,7 +202,7 @@ function BriefBuilder({ mode, brief, onUpdate, onBack, onGenerate }) {
         {step.fields ? step.fields.map((f) => (
           <div key={f.id} className="sm-field">
             <label className="sm-field-label">
-              {f.label}{!f.required ? <span className="sm-field-optional"> (optional)</span> : null}
+              {f.label}{!f.required && !/\(optional\)/i.test(f.label) ? <span className="sm-field-optional"> (optional)</span> : null}
             </label>
             {f.type === "textarea" ? (
               <textarea
@@ -218,6 +220,7 @@ function BriefBuilder({ mode, brief, onUpdate, onBack, onGenerate }) {
                 onChange={(e) => onUpdate({ [f.id]: e.target.value })}
               />
             )}
+            {f.helper ? <p className="sm-field-helper">{f.helper}</p> : null}
           </div>
         )) : null}
 
@@ -932,6 +935,7 @@ export default function WordPressBlogCreate() {
         voice: { tone: brief.tone || [] },
         length: brief.length || "standard",
         notes: brief.angle || "",
+        reference_url: (brief.reference_url || "").trim() || null,
         custom_featured_image_url: (brief.custom_image || [])[0]?.url || null,
         reference_images: brief.reference_images || [],
       };
