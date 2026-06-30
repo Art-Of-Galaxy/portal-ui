@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Mic, Sparkles, Workflow } from "lucide-react";
+import { ArrowLeft, FileText, Mic, Newspaper, Sparkles, Workflow } from "lucide-react";
 
 // Sub-service catalog for AI Integrations & Automations. Mirrors
 // AIVideoProduction: hero strip + tool tiles. Shopify Blog Engine is
@@ -13,6 +13,15 @@ const TOOLS = [
     icon: FileText,
     accent: "linear-gradient(135deg, #5e8e3e 0%, #0f766e 100%)",
     path: "/new-projects/ai-integrations/shopify-blog",
+    comingSoon: false,
+  },
+  {
+    id: "wp-blog",
+    title: "WordPress Blog Engine",
+    description: "Connect your WordPress site with an application password and auto-publish SEO articles on schedule.",
+    icon: Newspaper,
+    accent: "linear-gradient(135deg, #21759b 0%, #1e3a5f 100%)",
+    path: "/new-projects/ai-integrations/wp-blog",
     comingSoon: false,
   },
   {

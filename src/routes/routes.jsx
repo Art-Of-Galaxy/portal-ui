@@ -30,6 +30,9 @@ import AIIntegrations from "../pages/projects/AIIntegrations";
 import BlogEngineHub from "../pages/projects/blog/BlogEngineHub";
 import BlogEngineCreate from "../pages/projects/blog/BlogEngineCreate";
 import ShopifyConnections from "../pages/projects/blog/ShopifyConnections";
+import WordPressBlogHub from "../pages/projects/wp-blog/WordPressBlogHub";
+import WordPressBlogCreate from "../pages/projects/wp-blog/WordPressBlogCreate";
+import WordPressConnections from "../pages/projects/wp-blog/WordPressConnections";
 import PrivacyPolicy from "../pages/legal/PrivacyPolicy";
 import DataDeletion from "../pages/legal/DataDeletion";
 import LogoDesign from "../pages/projects/LogoDesign";
@@ -119,6 +122,9 @@ const AppRoutes = () => {
           <Route path="/new-projects/ai-integrations/shopify-blog" element={withLayout(BlogEngineHub)} />
           <Route path="/new-projects/ai-integrations/shopify-blog/create" element={withLayout(BlogEngineCreate)} />
           <Route path="/new-projects/ai-integrations/shopify-blog/connections" element={withLayout(ShopifyConnections)} />
+          <Route path="/new-projects/ai-integrations/wp-blog" element={withLayout(WordPressBlogHub)} />
+          <Route path="/new-projects/ai-integrations/wp-blog/create" element={withLayout(WordPressBlogCreate)} />
+          <Route path="/new-projects/ai-integrations/wp-blog/connections" element={withLayout(WordPressConnections)} />
           <Route path="/new-projects/video" element={withLayout(AIVideoProduction)} />
           <Route path="/new-projects/video/ugc-ads" element={withLayout(UGCAdsForm)} />
 

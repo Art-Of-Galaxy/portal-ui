@@ -393,6 +393,140 @@ export const apiServices = {
         return fetchWithConfig(`blog-engine/autopilot/${id}${qs}`, { method: 'DELETE' });
     },
 
+    // ---------- WordPress connections (multi-site) ----------
+    wordpress_connections_list: async () => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`wordpress-connections${qs}`, { method: 'GET' });
+    },
+    wordpress_connections_connect: async ({ site_url, username, app_password }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('wordpress-connections', {
+            method: 'POST',
+            body: { site_url, username, app_password, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wordpress_connections_disconnect: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`wordpress-connections/${id}${qs}`, { method: 'DELETE' });
+    },
+    wordpress_connections_categories: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`wordpress-connections/${id}/categories${qs}`, { method: 'GET' });
+    },
+    wordpress_connections_patch: async ({ id, ...rest }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`wordpress-connections/${id}`, {
+            method: 'PATCH',
+            body: { ...rest, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wordpress_connections_set_primary: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`wordpress-connections/${id}/primary`, {
+            method: 'PATCH',
+            body: { user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+
+    // ---------- WordPress Blog Engine ----------
+    wp_blog_engine_generate: async ({ brief }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('wp-blog-engine/generate', {
+            method: 'POST',
+            body: { brief, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wp_blog_engine_save: async (payload) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('wp-blog-engine/save', {
+            method: 'POST',
+            body: { ...payload, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wp_blog_engine_bulk: async (payload) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('wp-blog-engine/bulk', {
+            method: 'POST',
+            body: { ...payload, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wp_blog_engine_publish_now: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`wp-blog-engine/${id}/publish`, {
+            method: 'POST',
+            body: { user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wp_blog_engine_set_featured_image: async ({ id, image_url, source, content_type }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`wp-blog-engine/${id}/featured-image`, {
+            method: 'POST',
+            body: { image_url, source, content_type, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wp_blog_engine_regen_image: async ({ id, prompt, reference_image_urls }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`wp-blog-engine/${id}/regen-image`, {
+            method: 'POST',
+            body: { prompt, reference_image_urls, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wp_blog_engine_library: async ({ filter = 'all' } = {}) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = new URLSearchParams();
+        qs.set('filter', filter);
+        if (userEmail) qs.set('user_email', userEmail);
+        return fetchWithConfig(`wp-blog-engine/library?${qs.toString()}`, { method: 'GET' });
+    },
+    wp_blog_engine_stats: async () => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`wp-blog-engine/stats${qs}`, { method: 'GET' });
+    },
+    wp_blog_engine_get: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`wp-blog-engine/articles/${id}${qs}`, { method: 'GET' });
+    },
+    wp_blog_engine_autopilot_save: async (payload) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig('wp-blog-engine/autopilot', {
+            method: 'POST',
+            body: { ...payload, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wp_blog_engine_autopilots_list: async () => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`wp-blog-engine/autopilot${qs}`, { method: 'GET' });
+    },
+    wp_blog_engine_autopilot_patch: async ({ id, ...rest }) => {
+        const userEmail = localStorage.getItem('user_email') || undefined;
+        return fetchWithConfig(`wp-blog-engine/autopilot/${id}`, {
+            method: 'PATCH',
+            body: { ...rest, user_email: userEmail },
+            headers: { 'Content-Type': 'application/json' },
+        });
+    },
+    wp_blog_engine_autopilot_destroy: async ({ id }) => {
+        const userEmail = localStorage.getItem('user_email') || '';
+        const qs = userEmail ? `?user_email=${encodeURIComponent(userEmail)}` : '';
+        return fetchWithConfig(`wp-blog-engine/autopilot/${id}${qs}`, { method: 'DELETE' });
+    },
+
     generate_packaging_design: async ({ form, model }) => {
         const userEmail = localStorage.getItem('user_email') || undefined;
         const response = await fetchWithConfig('packaging-design/generate', {
